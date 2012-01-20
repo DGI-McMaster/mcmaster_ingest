@@ -97,16 +97,16 @@ if __name__ == '__main__':
     jp2_lossless_files = os.listdir(jp2_lossless_directory)
     fits_files = os.listdir(fits_directory)
     
-    name_space = u'itm'
+    name_space = u'macrepo:1' #double check this
     
     '''
     do ingest
     '''
-        #put in the Italian topographical map object
+    #put in the Italian topographical map object
     try:
-        collection_label = u'itm'
+        collection_label = u'Italian Topographical Maps' #double check this
         collection_pid = unicode(name_space + ':' + collection_label)
-        collection_policy = u'<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca">  <content_models>    <content_model dsid="ISLANDORACM" name="Book Content Model" namespace="islandora:1" pid="islandora:bookCModel"></content_model>  </content_models>  <search_terms></search_terms>  <staging_area></staging_area>  <relationship>isMemberOf</relationship></collection_policy>'
+        collection_policy = u'<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd"> <content_models> <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"/> <content_model dsid="ISLANDORACM" name="Islandora large image content model" namespace="macrepo:1" pid="islandora:sp_large_image_cmodel"/> </content_models> <search_terms/> <staging_area/> <relationship>isMemberOfCollection</relationship> </collection_policy> '
         fedora.getObject(collection_pid)
     except FedoraConnectionException, object_fetch_exception:
         if object_fetch_exception.httpcode in [404]:
@@ -172,10 +172,10 @@ if __name__ == '__main__':
             tif_file_handle = open(tif_file_path, 'rb')
             
             try:
-                map_object.addDataStream(u'TIFF', u'aTmpStr', label=u'TIFF',
-                mimeType = u'image/tiff', controlGroup = u'M',
+                map_object.addDataStream(u'OBJ', u'aTmpStr', label=u'OBJ',
+                mimeType = u'image/tif', controlGroup = u'M',
                 logMessage = u'Added TIFF datastream.')
-                datastream = map_object['TIFF']
+                datastream = map_object['OBJ']
                 datastream.setContent(tif_file_handle)
                 logging.info('Added TIFF datastream to:' + map_pid)
             except FedoraConnectionException:
@@ -211,7 +211,7 @@ if __name__ == '__main__':
                 map_object.addDataStream(u'TN', u'aTmpStr', label=u'TN',
                 mimeType = u'image/jpeg', controlGroup = u'M',
                 logMessage = u'Added JPG thumb datastream.')
-                datastream = map_object['TN'] #double check datastream name w/large image solution pack
+                datastream = map_object['TN'] 
                 datastream.setContent(jpg_thumb_file_handle)
                 logging.info('Added JPG thumb datastream to:' + map_pid)
             except FedoraConnectionException:
@@ -229,7 +229,7 @@ if __name__ == '__main__':
                 map_object.addDataStream(u'JP2', u'aTmpStr', label=u'JP2',
                 mimeType = u'image/jp2', controlGroup = u'M',
                 logMessage = u'Added JP2 lossy datastream.')
-                datastream = map_object['JP2'] #look up correct datastream name w/large image solution pack
+                datastream = map_object['JP2'] 
                 datastream.setContent(jp2_lossy_file_handle)
                 logging.info('Added JP2 lossy datastream to:' + map_pid)
             except FedoraConnectionException:
@@ -244,10 +244,10 @@ if __name__ == '__main__':
             jp2_lossless_file_handle = open(jp2_lossless_file_path, 'rb')
 
             try:
-                map_object.addDataStream(u'JP2', u'aTmpStr', label=u'JP2',
+                map_object.addDataStream(u'LOSSLESS_JP2', u'aTmpStr', label=u'LOSSLESS_JP2',
                 mimeType = u'image/jp2', controlGroup = u'M',
                 logMessage = u'Added JP2 lossless datastream.')
-                datastream = map_object['JP2'] ##look up correct datastream name w/large image solution pack
+                datastream = map_object['LOSSLESS_JP2'] 
                 datastream.setContent(jp2_lossless_file_handle)
                 logging.info('Added JP2 lossless datastream to:' + map_pid)
             except FedoraConnectionException:
@@ -257,7 +257,7 @@ if __name__ == '__main__':
 	    #add relationships
             objRelsExt = fedora_relationships.rels_ext(map_object, fedora_model_namespace)
             objRelsExt.addRelationship('isMemberOf', collection_pid)
-            objRelsExt.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:bookCModel') #need large image content model pid name
+            objRelsExt.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:sp_large_image_cmodel') #need large image content model pid name
             objRelsExt.update()
             
     sys.exit()
