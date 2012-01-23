@@ -1,8 +1,7 @@
 '''
 Created on January, 19, 2012
 This file handles the batch ingest of the Italian topographical map collection for McMaster University Libray
-@adapted from Will Panting's Hamilton College ingest script (https://github.com/DGI-Hamilton-College/Hamilton_ingest.git
-)
+@adapted from Will Panting's Hamilton College ingest script (https://github.com/DGI-Hamilton-College/Hamilton_ingest)
 @author: Nick Ruest
 '''
 import logging, sys, os, ConfigParser, time, subprocess#, shutil
@@ -22,7 +21,7 @@ if __name__ == '__main__':
     '''
     setup
     '''
-    #hamilton_rdf_name_space = fedora_relationships.rels_namespace('hamilton', 'http://hamilton.org/ontology#')
+    macrepo_rdf_name_space = fedora_relationships.rels_namespace('macrepo', 'http://repository.mcmaster.ca/ontology#')
     fedora_model_namespace = fedora_relationships.rels_namespace('fedora-model','info:fedora/fedora-system:def/model#')
     
         
@@ -36,7 +35,6 @@ if __name__ == '__main__':
     #get config
     config = ConfigParser.ConfigParser()
     config.read(os.path.join(source_directory,'mcmaster.cfg'))
-    #config.read(os.path.join(source_directory,'TEST.cfg'))
     solrUrl = config.get('Solr','url')
     fedoraUrl = config.get('Fedora','url')
     fedoraUserName = config.get('Fedora', 'username')
@@ -97,14 +95,14 @@ if __name__ == '__main__':
     jp2_lossless_files = os.listdir(jp2_lossless_directory)
     fits_files = os.listdir(fits_directory)
     
-    name_space = u'macrepo:1' #double check this
+    name_space = u'macrepo'
     
     '''
     do ingest
     '''
     #put in the Italian topographical map object
     try:
-        collection_label = u'Italian Topographical Maps' #double check this
+        collection_label = u'15' #double check this
         collection_pid = unicode(name_space + ':' + collection_label)
         collection_policy = u'<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd"> <content_models> <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"/> <content_model dsid="ISLANDORACM" name="Islandora large image content model" namespace="macrepo:1" pid="islandora:sp_large_image_cmodel"/> </content_models> <search_terms/> <staging_area/> <relationship>isMemberOfCollection</relationship> </collection_policy> '
         fedora.getObject(collection_pid)
@@ -257,7 +255,7 @@ if __name__ == '__main__':
 	    #add relationships
             objRelsExt = fedora_relationships.rels_ext(map_object, fedora_model_namespace)
             objRelsExt.addRelationship('isMemberOf', collection_pid)
-            objRelsExt.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:sp_large_image_cmodel') #need large image content model pid name
+            objRelsExt.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:sp_large_image_cmodel')
             objRelsExt.update()
             
     sys.exit()
