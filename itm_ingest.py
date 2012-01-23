@@ -51,44 +51,44 @@ if __name__ == '__main__':
         sys.exit()
 
     #setup the directories
-    mods_directory = os.path.join(source_directory, 'mods')
+    mods_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/ITM/mods')
     if not os.path.isdir(mods_directory):
         logging.error('MODS directory invalid \n')
         sys.exit()
     
-    tif_directory = os.path.join(source_directory, 'tif')
+    tif_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/ITM/tif')
     if not os.path.isdir(tif_directory):
         logging.error('TIF directory invalid \n')
         sys.exit()
 
-    jpg_med_directory = os.path.join(source_directory, 'jpg_medium')
+    jpg_med_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/ITM/jpg_medium')
     if not os.path.isdir(jpg_med_directory):
         logging.error('JPG medium directory invalid \n')
         sys.exit()
 
-    jpg_thumb_directory = os.path.join(source_directory, 'jpg_thumb')
+    jpg_thumb_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/ITM/jpg_thumb')
     if not os.path.isdir(jpg_thumb_directory):
         logging.error('JPG thumbnail directory invalid \n')
         sys.exit()    
 
-    jp2_lossy_directory = os.path.join(source_directory, 'jp2_lossy')
+    jp2_lossy_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/ITM/jp2_lossy')
     if not os.path.isdir(jp2_lossy_directory):
         logging.error('JP2 lossy directory invalid \n')
         sys.exit()
     
-    jp2_lossless_directory = os.path.join(source_directory, 'jp2_lossless')
+    jp2_lossless_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/ITM/jp2_lossless')
     if not os.path.isdir(jp2_lossless_directory):
         logging.error('JP2 lossless directory invalid \n')
         sys.exit()
    
-    fits_directory = os.path.join(source_directory, 'fits')
+    fits_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/ITM/fits')
     if not os.path.isdir(fits_directory):
       logging.error('FITS directroy invalid \n')
       sys.exit()
     
     #prep data structures (files)
     mods_files = os.listdir(mods_directory)
-    tif_files = os.listdir(tei_directory)
+    tif_files = os.listdir(tif_directory)
     jpg_med_files = os.listdir(jpg_med_directory)
     jpg_thumb_files = os.listdir(jpg_thumb_directory)
     jp2_lossy_files = os.listdir(jp2_lossy_directory)
@@ -127,12 +127,12 @@ if __name__ == '__main__':
 
     #loop through the mods folder
     for mods_file in mods_files:
-        if mods_file.endswith('-MODS.xml'):
+        if mods_file.endswith('.xml'):
             #get mods file contents
-            mods_file_path = os.path.join(source_directory, 'mods-xml', mods_file)
+            mods_file_path = os.path.join(source_directory, 'mods', mods_file)
             mods_file_handle = open(mods_file_path)
             mods_contents = mods_file_handle.read()
-            
+           
             #get map_label from mods title
             mods_tree = etree.parse(mods_file_path)
             map_label = mods_tree.xpath("*[local-name() = 'titleInfo']/*[local-name() = 'title']/text()")
@@ -142,7 +142,11 @@ if __name__ == '__main__':
             print(map_label)
             map_label = unicode(map_label)
             
-            #add mods datastream
+            #create a map object
+            map_pid = fedora.getNextPID(name_space)
+	    map_object = fedora.createObject(map_pid, label = map_label)
+
+	    #add mods datastream
             mods_file_handle.close()
             try:
                 map_object.addDataStream(u'MODS', unicode(mods_contents), label = u'MODS',
@@ -153,18 +157,24 @@ if __name__ == '__main__':
                 logging.error('Error in adding MODS datastream to:' + map_pid + '\n')
 
             #add fits datastream
-            mods_file_handle.close()
-            try:
+
+            map_name = mods_file[:mods_file.find('.')]
+            fits_file = map_name + '.xml'
+            fits_file_path = os.path.join(source_directory, 'fits', fits_file)
+            fits_file_handle = open(fits_file_path, 'rb')
+
+	    try:
                 map_object.addDataStream(u'FITS', unicode(mods_contents), label = u'FITS',
                 mimeType = u'text/xml', controlGroup = u'X',
                 logMessage = u'Added fits meta data.')
                 logging.info('Added FITS datastream to:' + map_pid)
             except FedoraConnectionException:
                 logging.error('Error in adding FITS datastream to:' + map_pid + '\n')
+            fits_file_handle.close()
             
             #add tif datastream
-            
-            map_name = mods_file[:mods_file.find('_')]
+           
+            map_name = mods_file[:mods_file.find('.')] 
             tif_file = map_name + '.tif'
             tif_file_path = os.path.join(source_directory, 'tif', tif_file)
             tif_file_handle = open(tif_file_path, 'rb')
@@ -181,10 +191,10 @@ if __name__ == '__main__':
             tif_file_handle.close()
             
             #add jpg medium datastream
-
-            map_name = mods_file[:mods_file.find('_')]
+            
+            map_name = mods_file[:mods_file.find('.')]
             jpg_med_file = map_name + '.jpg'
-            jpg_med_file_path = os.path.join(source_directory, 'jpg', jpg_med_file)
+            jpg_med_file_path = os.path.join(source_directory, 'jpg_medium', jpg_med_file)
             jpg_med_file_handle = open(jpg_med_file_path, 'rb')
 
             try:
@@ -199,10 +209,10 @@ if __name__ == '__main__':
             jpg_med_file_handle.close()
 
             #add jpg thumbnail datastream
-
-            map_name = mods_file[:mods_file.find('_')]
+           
+            map_name = mods_file[:mods_file.find('.')]
             jpg_thumb_file = map_name + '.jpg'
-            jpg_thumb_file_path = os.path.join(source_directory, 'jpg', jpg_thumb_file)
+            jpg_thumb_file_path = os.path.join(source_directory, 'jpg_thumb', jpg_thumb_file)
             jpg_thumb_file_handle = open(jpg_thumb_file_path, 'rb')
 
             try:
@@ -218,7 +228,7 @@ if __name__ == '__main__':
 
             #add jp2 lossy datastream
 
-            map_name = mods_file[:mods_file.find('_')]
+            map_name = mods_file[:mods_file.find('.')]
             jp2_lossy_file = map_name + '.jp2'
             jp2_lossy_file_path = os.path.join(source_directory, 'jp2_lossy', jp2_lossy_file)
             jp2_lossy_file_handle = open(jp2_lossy_file_path, 'rb')
@@ -236,9 +246,9 @@ if __name__ == '__main__':
 
             #add jp2 lossless datastream
 
-            map_name = mods_file[:mods_file.find('_')]
+            map_name = mods_file[:mods_file.find('.')]
             jp2_lossless_file = map_name + '.jp2'
-            jp2_lossless_file_path = os.path.join(source_directory, 'jp2', jp2_lossless_file)
+            jp2_lossless_file_path = os.path.join(source_directory, 'jp2_lossless', jp2_lossless_file)
             jp2_lossless_file_handle = open(jp2_lossless_file_path, 'rb')
 
             try:
