@@ -43,7 +43,7 @@ if __name__ == '__main__':
     #get fedora connection
     connection = Connection(fedoraUrl,
                     username=fedoraUserName,
-                     password=fedoraPassword)
+                    password=fedoraPassword)
     try:
         fedora=FedoraClient(connection)
     except FedoraConnectionException:
@@ -102,7 +102,7 @@ if __name__ == '__main__':
     '''
     #put in the Italian topographical map object
     try:
-        collection_label = u'15' #double check this
+        collection_label = u'15'
         collection_pid = unicode(name_space + ':' + collection_label)
         collection_policy = u'<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd"> <content_models> <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"/> <content_model dsid="ISLANDORACM" name="Islandora large image content model" namespace="macrepo:1" pid="islandora:sp_large_image_cmodel"/> </content_models> <search_terms/> <staging_area/> <relationship>isMemberOfCollection</relationship> </collection_policy> '
         fedora.getObject(collection_pid)
@@ -121,13 +121,13 @@ if __name__ == '__main__':
             
             #add relationships
             collection_object_RELS_EXT = fedora_relationships.rels_ext(collection_object, fedora_model_namespace)
-            collection_object_RELS_EXT.addRelationship('isMemberOf','macrepo:15')
+            collection_object_RELS_EXT.addRelationship('isMemberOf','islandora:root')
             collection_object_RELS_EXT.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:collectionCModel')
             collection_object_RELS_EXT.update()
 
     #loop through the mods folder
     for mods_file in mods_files:
-        if mods_file.endswith('.xml'):
+        if mods_file.endswith('-MODS.xml'):
             #get mods file contents
             mods_file_path = os.path.join(source_directory, 'mods', mods_file)
             mods_file_handle = open(mods_file_path)
@@ -144,9 +144,10 @@ if __name__ == '__main__':
             
             #create a map object
             map_pid = fedora.getNextPID(name_space)
-	    map_object = fedora.createObject(map_pid, label = map_label)
+	          map_object = fedora.createObject(map_pid, label = map_label)
 
-	    #add mods datastream
+	          #add mods datastream
+            
             mods_file_handle.close()
             try:
                 map_object.addDataStream(u'MODS', unicode(mods_contents), label = u'MODS',
@@ -159,11 +160,11 @@ if __name__ == '__main__':
             #add fits datastream
 
             map_name = mods_file[:mods_file.find('.')]
-            fits_file = map_name + '.xml'
+            fits_file = map_name + '-FITS.xml'
             fits_file_path = os.path.join(source_directory, 'fits', fits_file)
             fits_file_handle = open(fits_file_path, 'rb')
 
-	    try:
+            try:
                 map_object.addDataStream(u'FITS', unicode(mods_contents), label = u'FITS',
                 mimeType = u'text/xml', controlGroup = u'X',
                 logMessage = u'Added fits meta data.')
