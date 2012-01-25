@@ -167,7 +167,7 @@ if __name__ == '__main__':
             fits_file_handle = open(fits_file_path, 'rb')
 
             try:
-                map_object.addDataStream(u'FITS', unicode(mods_contents), label = u'FITS',
+                map_object.addDataStream(u'FITS', unicode(fits_contents), label = u'FITS',
                 mimeType = u'text/xml', controlGroup = u'X',
                 logMessage = u'Added fits meta data.')
                 logging.info('Added FITS datastream to:' + map_pid)
