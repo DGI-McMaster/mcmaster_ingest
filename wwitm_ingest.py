@@ -1,5 +1,5 @@
 '''
-Created on January, 24, 2012
+Created on January 24, 2012
 This file handles the batch ingest of the Italian topographical map collection for McMaster University Libray
 @adapted from Will Panting's Hamilton College ingest script (https://github.com/DGI-Hamilton-College/Hamilton_ingest)
 @author: Nick Ruest
@@ -85,6 +85,11 @@ if __name__ == '__main__':
     if not os.path.isdir(fits_directory):
       logging.error('FITS directroy invalid \n')
       sys.exit()
+
+    macrepo_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWITM/macrepo')
+    if not os.path.isdir(fits_directory):
+      logging.error('MACREPO directroy invalid \n')
+      sys.exit()
     
     #prep data structures (files)
     mods_files = os.listdir(mods_directory)
@@ -94,13 +99,14 @@ if __name__ == '__main__':
     jp2_lossy_files = os.listdir(jp2_lossy_directory)
     jp2_lossless_files = os.listdir(jp2_lossless_directory)
     fits_files = os.listdir(fits_directory)
-    
+    macrepo_files = os.listdir(macrepo_directory)   
+ 
     name_space = u'macrepo'
     
     '''
     do ingest
     '''
-    #put in the World War, 1914-1918, Trench maps object
+    #put in the World War, 1914-1918, trench map object
     try:
         collection_label = u'49'
         collection_pid = unicode(name_space + ':' + collection_label)
@@ -121,13 +127,13 @@ if __name__ == '__main__':
             
             #add relationships
             collection_object_RELS_EXT = fedora_relationships.rels_ext(collection_object, fedora_model_namespace)
-            collection_object_RELS_EXT.addRelationship('isMemberOf','macrepo:15')
+            collection_object_RELS_EXT.addRelationship('isMemberOf','islandora:root')
             collection_object_RELS_EXT.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:collectionCModel')
             collection_object_RELS_EXT.update()
 
     #loop through the mods folder
     for mods_file in mods_files:
-        if mods_file.endswith('.xml'):
+        if mods_file.endswith('-MODS.xml'):
             #get mods file contents
             mods_file_path = os.path.join(source_directory, 'mods', mods_file)
             mods_file_handle = open(mods_file_path)
@@ -139,14 +145,17 @@ if __name__ == '__main__':
             map_label = map_label[0]
             if len(map_label) > 255:
                 map_label = map_label[0:250] + '...'
-            print(map_label)
+            #print(map_label)
             map_label = unicode(map_label)
-            
+            map_name = mods_tree.xpath("*[local-name() = 'identifier']/text()")[0].strip("\t\n\r")        
+ 
             #create a map object
             map_pid = fedora.getNextPID(name_space)
-	          map_object = fedora.createObject(map_pid, label = map_label)
+	    map_object = fedora.createObject(map_pid, label = map_label)
+            print map_pid "\n"
 
 	    #add mods datastream
+            
             mods_file_handle.close()
             try:
                 map_object.addDataStream(u'MODS', unicode(mods_contents), label = u'MODS',
@@ -158,23 +167,36 @@ if __name__ == '__main__':
 
             #add fits datastream
 
-            map_name = mods_file[:mods_file.find('.')]
-            fits_file = map_name + '.xml'
+            fits_file = map_name + '-FITS.xml'
             fits_file_path = os.path.join(source_directory, 'fits', fits_file)
             fits_file_handle = open(fits_file_path, 'rb')
 
-	          try:
-                map_object.addDataStream(u'FITS', unicode(mods_contents), label = u'FITS',
+            try:
+                map_object.addDataStream(u'FITS', unicode(fits_contents), label = u'FITS',
                 mimeType = u'text/xml', controlGroup = u'X',
                 logMessage = u'Added fits meta data.')
                 logging.info('Added FITS datastream to:' + map_pid)
             except FedoraConnectionException:
                 logging.error('Error in adding FITS datastream to:' + map_pid + '\n')
-                fits_file_handle.close()
+            fits_file_handle.close()
+
+            #add macrepo datastream
+
+            macrepo_file = map_name + '-MACREPO.xml'
+            macrepo_file_path = os.path.join(source_directory, 'macrepo', macrepo_file)
+            macrepo_file_handle = open(macrepo_file_path, 'rb')
+
+            try:
+                map_object.addDataStream(u'MACREPO', unicode(macrepo_contents), label = u'MACREPO',
+                mimeType = u'text/xml', controlGroup = u'X',
+                logMessage = u'Added macrepo meta data.')
+                logging.info('Added MACREPO datastream to:' + map_pid)
+            except FedoraConnectionException:
+                logging.error('Error in adding MACREPO datastream to:' + map_pid + '\n')
+            fits_file_handle.close()
             
             #add tif datastream
            
-            map_name = mods_file[:mods_file.find('.')] 
             tif_file = map_name + '.tif'
             tif_file_path = os.path.join(source_directory, 'tif', tif_file)
             tif_file_handle = open(tif_file_path, 'rb')
@@ -188,11 +210,10 @@ if __name__ == '__main__':
                 logging.info('Added TIFF datastream to:' + map_pid)
             except FedoraConnectionException:
                 logging.error('Error in adding TIFF datastream to:' + map_pid + '\n')
-                tif_file_handle.close()
+            tif_file_handle.close()
             
             #add jpg medium datastream
             
-            map_name = mods_file[:mods_file.find('.')]
             jpg_med_file = map_name + '.jpg'
             jpg_med_file_path = os.path.join(source_directory, 'jpg_medium', jpg_med_file)
             jpg_med_file_handle = open(jpg_med_file_path, 'rb')
@@ -206,11 +227,10 @@ if __name__ == '__main__':
                 logging.info('Added JPG medium datastream to:' + map_pid)
             except FedoraConnectionException:
                 logging.error('Error in adding JPG medium  datastream to:' + map_pid + '\n')
-                jpg_med_file_handle.close()
+            jpg_med_file_handle.close()
 
             #add jpg thumbnail datastream
            
-            map_name = mods_file[:mods_file.find('.')]
             jpg_thumb_file = map_name + '.jpg'
             jpg_thumb_file_path = os.path.join(source_directory, 'jpg_thumb', jpg_thumb_file)
             jpg_thumb_file_handle = open(jpg_thumb_file_path, 'rb')
@@ -224,11 +244,10 @@ if __name__ == '__main__':
                 logging.info('Added JPG thumb datastream to:' + map_pid)
             except FedoraConnectionException:
                 logging.error('Error in adding JPG thumb datastream to:' + map_pid + '\n')
-                jpg_thumb_file_handle.close()
+            jpg_thumb_file_handle.close()
 
             #add jp2 lossy datastream
 
-            map_name = mods_file[:mods_file.find('.')]
             jp2_lossy_file = map_name + '.jp2'
             jp2_lossy_file_path = os.path.join(source_directory, 'jp2_lossy', jp2_lossy_file)
             jp2_lossy_file_handle = open(jp2_lossy_file_path, 'rb')
@@ -242,11 +261,10 @@ if __name__ == '__main__':
                 logging.info('Added JP2 lossy datastream to:' + map_pid)
             except FedoraConnectionException:
                 logging.error('Error in adding JP2 lossy datastream to:' + map_pid + '\n')
-                jp2_lossy_file_handle.close()
+            jp2_lossy_file_handle.close()
 
             #add jp2 lossless datastream
 
-            map_name = mods_file[:mods_file.find('.')]
             jp2_lossless_file = map_name + '.jp2'
             jp2_lossless_file_path = os.path.join(source_directory, 'jp2_lossless', jp2_lossless_file)
             jp2_lossless_file_handle = open(jp2_lossless_file_path, 'rb')
@@ -260,7 +278,7 @@ if __name__ == '__main__':
                 logging.info('Added JP2 lossless datastream to:' + map_pid)
             except FedoraConnectionException:
                 logging.error('Error in adding lossless datastream to:' + map_pid + '\n')
-                jp2_lossless_file_handle.close()
+            jp2_lossless_file_handle.close()
 
 	    #add relationships
             objRelsExt = fedora_relationships.rels_ext(map_object, fedora_model_namespace)
