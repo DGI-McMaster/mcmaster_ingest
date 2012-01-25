@@ -1,0 +1,9 @@
+#!/bin/bash
+
+mkdir ./logs 
+
+echo "Running letter ingester: ingest to fedora"
+
+python ./wwiap_ingest.py ./ &> ./logs/wwiap_ingest_report.txt
+
+echo "Done."
