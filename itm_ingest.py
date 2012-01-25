@@ -141,12 +141,14 @@ if __name__ == '__main__':
                 map_label = map_label[0:250] + '...'
             print(map_label)
             map_label = unicode(map_label)
-            
+            map_name = mods_tree.xpath("*[local-name() = 'identifier']/text()")[0].strip("\t\n\r")           
+            print map_name
+ 
             #create a map object
             map_pid = fedora.getNextPID(name_space)
-	          map_object = fedora.createObject(map_pid, label = map_label)
+	    map_object = fedora.createObject(map_pid, label = map_label)
 
-	          #add mods datastream
+	    #add mods datastream
             
             mods_file_handle.close()
             try:
@@ -159,7 +161,7 @@ if __name__ == '__main__':
 
             #add fits datastream
 
-            map_name = mods_file[:mods_file.find('.')]
+            #map_name = mods_file[:mods_file.find('.')]
             fits_file = map_name + '-FITS.xml'
             fits_file_path = os.path.join(source_directory, 'fits', fits_file)
             fits_file_handle = open(fits_file_path, 'rb')
@@ -175,7 +177,7 @@ if __name__ == '__main__':
             
             #add tif datastream
            
-            map_name = mods_file[:mods_file.find('.')] 
+            #map_name = mods_file[:mods_file.find('.')] 
             tif_file = map_name + '.tif'
             tif_file_path = os.path.join(source_directory, 'tif', tif_file)
             tif_file_handle = open(tif_file_path, 'rb')
@@ -193,7 +195,7 @@ if __name__ == '__main__':
             
             #add jpg medium datastream
             
-            map_name = mods_file[:mods_file.find('.')]
+            #map_name = mods_file[:mods_file.find('.')]
             jpg_med_file = map_name + '.jpg'
             jpg_med_file_path = os.path.join(source_directory, 'jpg_medium', jpg_med_file)
             jpg_med_file_handle = open(jpg_med_file_path, 'rb')
@@ -211,7 +213,7 @@ if __name__ == '__main__':
 
             #add jpg thumbnail datastream
            
-            map_name = mods_file[:mods_file.find('.')]
+            #map_name = mods_file[:mods_file.find('.')]
             jpg_thumb_file = map_name + '.jpg'
             jpg_thumb_file_path = os.path.join(source_directory, 'jpg_thumb', jpg_thumb_file)
             jpg_thumb_file_handle = open(jpg_thumb_file_path, 'rb')
@@ -229,7 +231,7 @@ if __name__ == '__main__':
 
             #add jp2 lossy datastream
 
-            map_name = mods_file[:mods_file.find('.')]
+            #map_name = mods_file[:mods_file.find('.')]
             jp2_lossy_file = map_name + '.jp2'
             jp2_lossy_file_path = os.path.join(source_directory, 'jp2_lossy', jp2_lossy_file)
             jp2_lossy_file_handle = open(jp2_lossy_file_path, 'rb')
@@ -247,7 +249,7 @@ if __name__ == '__main__':
 
             #add jp2 lossless datastream
 
-            map_name = mods_file[:mods_file.find('.')]
+            #map_name = mods_file[:mods_file.find('.')]
             jp2_lossless_file = map_name + '.jp2'
             jp2_lossless_file_path = os.path.join(source_directory, 'jp2_lossless', jp2_lossless_file)
             jp2_lossless_file_handle = open(jp2_lossless_file_path, 'rb')
