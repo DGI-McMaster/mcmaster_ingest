@@ -169,7 +169,8 @@ if __name__ == '__main__':
 
             fits_file = map_name + '-FITS.xml'
             fits_file_path = os.path.join(source_directory, 'fits', fits_file)
-            fits_file_handle = open(fits_file_path, 'rb')
+            fits_file_handle = open(fits_file_path)
+            fits_contents = fits_file_handle.read()
 
             try:
                 map_object.addDataStream(u'FITS', unicode(fits_contents), label = u'FITS',
@@ -184,7 +185,8 @@ if __name__ == '__main__':
 
             macrepo_file = map_name + '-MACREPO.xml'
             macrepo_file_path = os.path.join(source_directory, 'macrepo', macrepo_file)
-            macrepo_file_handle = open(macrepo_file_path, 'rb')
+            macrepo_file_handle = open(mcarepo_file_path)
+            macrepo_contents = macrepo_file_handle.read()
 
             try:
                 map_object.addDataStream(u'MACREPO', unicode(macrepo_contents), label = u'MACREPO',
@@ -193,7 +195,7 @@ if __name__ == '__main__':
                 logging.info('Added MACREPO datastream to:' + map_pid)
             except FedoraConnectionException:
                 logging.error('Error in adding MACREPO datastream to:' + map_pid + '\n')
-            fits_file_handle.close()
+            macrepo_file_handle.close()
             
             #add tif datastream
            

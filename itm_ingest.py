@@ -161,10 +161,10 @@ if __name__ == '__main__':
 
             #add fits datastream
 
-            #map_name = mods_file[:mods_file.find('.')]
             fits_file = map_name + '-FITS.xml'
             fits_file_path = os.path.join(source_directory, 'fits', fits_file)
-            fits_file_handle = open(fits_file_path, 'rb')
+            fits_file_handle = open(fits_file_path)
+            fits_contents = fits_file_handle.read()
 
             try:
                 map_object.addDataStream(u'FITS', unicode(fits_contents), label = u'FITS',
