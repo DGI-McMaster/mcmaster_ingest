@@ -127,7 +127,7 @@ if __name__ == '__main__':
             
             #add relationships
             collection_object_RELS_EXT = fedora_relationships.rels_ext(collection_object, fedora_model_namespace)
-            collection_object_RELS_EXT.addRelationship('isMemberOf','islandora:root')
+            collection_object_RELS_EXT.addRelationship('isMemberOfCollection','islandora:root')
             collection_object_RELS_EXT.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:collectionCModel')
             collection_object_RELS_EXT.update()
 
@@ -284,7 +284,7 @@ if __name__ == '__main__':
 
 	    #add relationships
             objRelsExt = fedora_relationships.rels_ext(map_object, fedora_model_namespace)
-            objRelsExt.addRelationship('isMemberOf', collection_pid)
+            objRelsExt.addRelationship('isMemberOfCollection', collection_pid)
             objRelsExt.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:sp_large_image_cmodel')
             objRelsExt.update()
             
