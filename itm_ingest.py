@@ -159,6 +159,18 @@ if __name__ == '__main__':
             except FedoraConnectionException:
                 logging.error('Error in adding MODS datastream to:' + map_pid + '\n')
 
+            #add Dublin Core Record for this object datastream
+            #replicate this php code:
+            #$xsl = new DomDocument();
+            #$xsl->load($path . '/xslt/mods_to_dc.xsl');
+            #$input = new DomDocument();
+            #$input->loadXML(trim($xmlstr));
+            #$xsl = $proc->importStylesheet($xsl);
+            #$newdom = $proc->transformToDoc($input);
+            #$dc_xml = $newdom->saveXML();
+            #
+            #then ingest transformed dc
+
             #add fits datastream
 
             fits_file = map_name + '-FITS.xml'
