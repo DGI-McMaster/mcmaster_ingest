@@ -1,0 +1,9 @@
+#!/bin/bash
+
+mkdir ./logs 
+
+echo "Running book ingester: ingest to fedora"
+
+python ./book_ingest.py ./ &> ./logs/book_ingest_report.txt
+
+echo "Done."
