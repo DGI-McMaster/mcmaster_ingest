@@ -128,7 +128,7 @@ if __name__ == '__main__':
     '''
     do ingest
     '''
-    #put in the Italian topographical map object
+    #put in the book object
     try:
         collection_label = u'15'
         collection_pid = unicode(name_space + ':' + collection_label)
@@ -136,7 +136,7 @@ if __name__ == '__main__':
         fedora.getObject(collection_pid)
     except FedoraConnectionException, object_fetch_exception:
         if object_fetch_exception.httpcode in [404]:
-            logging.info(name_space + ':itm missing, creating object.\n')
+            logging.info(name_space + ':book missing, creating object.\n')
             collection_object = fedora.createObject(collection_pid, label = collection_label)
             #collection_policy
             try:
@@ -161,31 +161,31 @@ if __name__ == '__main__':
             mods_file_handle = open(mods_file_path)
             mods_contents = mods_file_handle.read()
            
-            #get map_label from mods title
+            #get book_label from mods title
             mods_tree = etree.parse(mods_file_path)
-            map_label = mods_tree.xpath("*[local-name() = 'titleInfo']/*[local-name() = 'title']/text()")
-            map_label = map_label[0]
-            if len(map_label) > 255:
-                map_label = map_label[0:250] + '...'
-            #print(map_label)
-            map_label = unicode(map_label)
-            map_name = mods_tree.xpath("*[local-name() = 'identifier']/text()")[0].strip("\t\n\r")           
+            book_label = mods_tree.xpath("*[local-name() = 'titleInfo']/*[local-name() = 'title']/text()")
+            book_label = map_label[0]
+            if len(book_label) > 255:
+                book_label = map_label[0:250] + '...'
+            #print(book_label)
+            book_label = unicode(map_label)
+            book_name = mods_tree.xpath("*[local-name() = 'identifier']/text()")[0].strip("\t\n\r")           
  
-            #create a map object
-            map_pid = fedora.getNextPID(name_space)
-	    map_object = fedora.createObject(map_pid, label = map_label)
-	    print(map_pid)
+            #create a book object
+            book_pid = fedora.getNextPID(name_space)
+	    book_object = fedora.createObject(map_pid, label = map_label)
+	    print(book_pid)
 
 	    #add mods datastream
             
             mods_file_handle.close()
             try:
-                map_object.addDataStream(u'MODS', unicode(mods_contents), label = u'MODS',
+                book_object.addDataStream(u'MODS', unicode(mods_contents), label = u'MODS',
                 mimeType = u'text/xml', controlGroup = u'X',
                 logMessage = u'Added basic mods meta data.')
-                logging.info('Added MODS datastream to:' + map_pid)
+                logging.info('Added MODS datastream to:' + book_pid)
             except FedoraConnectionException:
-                logging.error('Error in adding MODS datastream to:' + map_pid + '\n')
+                logging.error('Error in adding MODS datastream to:' + book_pid + '\n')
 
             #add Dublin Core Record for this object datastream
             #replicate this php code:
@@ -201,112 +201,112 @@ if __name__ == '__main__':
 
             #add fits datastream
 
-            fits_file = map_name + '-FITS.xml'
+            fits_file = book_name + '-FITS.xml'
             fits_file_path = os.path.join(source_directory, 'fits', fits_file)
             fits_file_handle = open(fits_file_path)
             fits_contents = fits_file_handle.read()
 
             try:
-                map_object.addDataStream(u'FITS', unicode(fits_contents), label = u'FITS',
+                book_object.addDataStream(u'FITS', unicode(fits_contents), label = u'FITS',
                 mimeType = u'text/xml', controlGroup = u'X',
                 logMessage = u'Added fits meta data.')
-                logging.info('Added FITS datastream to:' + map_pid)
+                logging.info('Added FITS datastream to:' + book_pid)
             except FedoraConnectionException:
-                logging.error('Error in adding FITS datastream to:' + map_pid + '\n')
+                logging.error('Error in adding FITS datastream to:' + book_pid + '\n')
             fits_file_handle.close()
             
             #add tif datastream
            
-            #map_name = mods_file[:mods_file.find('.')] 
-            tif_file = map_name + '.tif'
+            #book_name = mods_file[:mods_file.find('.')] 
+            tif_file = book_name + '.tif'
             tif_file_path = os.path.join(source_directory, 'tif', tif_file)
             tif_file_handle = open(tif_file_path, 'rb')
             
             try:
-                map_object.addDataStream(u'OBJ', u'aTmpStr', label=u'OBJ',
+                book_object.addDataStream(u'OBJ', u'aTmpStr', label=u'OBJ',
                 mimeType = u'image/tif', controlGroup = u'M',
                 logMessage = u'Added TIFF datastream.')
-                datastream = map_object['OBJ']
+                datastream = book_object['OBJ']
                 datastream.setContent(tif_file_handle)
-                logging.info('Added TIFF datastream to:' + map_pid)
+                logging.info('Added TIFF datastream to:' + book_pid)
             except FedoraConnectionException:
-                logging.error('Error in adding TIFF datastream to:' + map_pid + '\n')
+                logging.error('Error in adding TIFF datastream to:' + book_pid + '\n')
             tif_file_handle.close()
             
             #add jpg medium datastream
             
-            #map_name = mods_file[:mods_file.find('.')]
-            jpg_med_file = map_name + '.jpg'
+            #book_name = mods_file[:mods_file.find('.')]
+            jpg_med_file = book_name + '.jpg'
             jpg_med_file_path = os.path.join(source_directory, 'jpg_medium', jpg_med_file)
             jpg_med_file_handle = open(jpg_med_file_path, 'rb')
 
             try:
-                map_object.addDataStream(u'JPG', u'aTmpStr', label=u'JPG',
+                book_object.addDataStream(u'JPG', u'aTmpStr', label=u'JPG',
                 mimeType = u'image/jpeg', controlGroup = u'M',
                 logMessage = u'Added JPG medium datastream.')
-                datastream = map_object['JPG'] #double check datastream name w/large image solution pack
+                datastream = book_object['JPG'] #double check datastream name w/large image solution pack
                 datastream.setContent(jpg_med_file_handle)
-                logging.info('Added JPG medium datastream to:' + map_pid)
+                logging.info('Added JPG medium datastream to:' + book_pid)
             except FedoraConnectionException:
-                logging.error('Error in adding JPG medium  datastream to:' + map_pid + '\n')
+                logging.error('Error in adding JPG medium  datastream to:' + book_pid + '\n')
             jpg_med_file_handle.close()
 
             #add jpg thumbnail datastream
            
-            #map_name = mods_file[:mods_file.find('.')]
-            jpg_thumb_file = map_name + '.jpg'
+            #book_name = mods_file[:mods_file.find('.')]
+            jpg_thumb_file = book_name + '.jpg'
             jpg_thumb_file_path = os.path.join(source_directory, 'jpg_thumb', jpg_thumb_file)
             jpg_thumb_file_handle = open(jpg_thumb_file_path, 'rb')
 
             try:
-                map_object.addDataStream(u'TN', u'aTmpStr', label=u'TN',
+                book_object.addDataStream(u'TN', u'aTmpStr', label=u'TN',
                 mimeType = u'image/jpeg', controlGroup = u'M',
                 logMessage = u'Added JPG thumb datastream.')
-                datastream = map_object['TN'] 
+                datastream = book_object['TN'] 
                 datastream.setContent(jpg_thumb_file_handle)
-                logging.info('Added JPG thumb datastream to:' + map_pid)
+                logging.info('Added JPG thumb datastream to:' + book_pid)
             except FedoraConnectionException:
-                logging.error('Error in adding JPG thumb datastream to:' + map_pid + '\n')
+                logging.error('Error in adding JPG thumb datastream to:' + book_pid + '\n')
             jpg_thumb_file_handle.close()
 
             #add jp2 lossy datastream
 
-            #map_name = mods_file[:mods_file.find('.')]
-            jp2_lossy_file = map_name + '.jp2'
+            #book_name = mods_file[:mods_file.find('.')]
+            jp2_lossy_file = book_name + '.jp2'
             jp2_lossy_file_path = os.path.join(source_directory, 'jp2_lossy', jp2_lossy_file)
             jp2_lossy_file_handle = open(jp2_lossy_file_path, 'rb')
 
             try:
-                map_object.addDataStream(u'JP2', u'aTmpStr', label=u'JP2',
+                book_object.addDataStream(u'JP2', u'aTmpStr', label=u'JP2',
                 mimeType = u'image/jp2', controlGroup = u'M',
                 logMessage = u'Added JP2 lossy datastream.')
-                datastream = map_object['JP2'] 
+                datastream = book_object['JP2'] 
                 datastream.setContent(jp2_lossy_file_handle)
-                logging.info('Added JP2 lossy datastream to:' + map_pid)
+                logging.info('Added JP2 lossy datastream to:' + book_pid)
             except FedoraConnectionException:
-                logging.error('Error in adding JP2 lossy datastream to:' + map_pid + '\n')
+                logging.error('Error in adding JP2 lossy datastream to:' + book_pid + '\n')
             jp2_lossy_file_handle.close()
 
             #add jp2 lossless datastream
 
-            #map_name = mods_file[:mods_file.find('.')]
-            jp2_lossless_file = map_name + '.jp2'
+            #book_name = mods_file[:mods_file.find('.')]
+            jp2_lossless_file = book_name + '.jp2'
             jp2_lossless_file_path = os.path.join(source_directory, 'jp2_lossless', jp2_lossless_file)
             jp2_lossless_file_handle = open(jp2_lossless_file_path, 'rb')
 
             try:
-                map_object.addDataStream(u'LOSSLESS_JP2', u'aTmpStr', label=u'LOSSLESS_JP2',
+                book_object.addDataStream(u'LOSSLESS_JP2', u'aTmpStr', label=u'LOSSLESS_JP2',
                 mimeType = u'image/jp2', controlGroup = u'M',
                 logMessage = u'Added JP2 lossless datastream.')
-                datastream = map_object['LOSSLESS_JP2'] 
+                datastream = book_object['LOSSLESS_JP2'] 
                 datastream.setContent(jp2_lossless_file_handle)
-                logging.info('Added JP2 lossless datastream to:' + map_pid)
+                logging.info('Added JP2 lossless datastream to:' + book_pid)
             except FedoraConnectionException:
-                logging.error('Error in adding lossless datastream to:' + map_pid + '\n')
+                logging.error('Error in adding lossless datastream to:' + book_pid + '\n')
             jp2_lossless_file_handle.close()
 
 	    #add relationships
-            objRelsExt = fedora_relationships.rels_ext(map_object, fedora_model_namespace)
+            objRelsExt = fedora_relationships.rels_ext(book_object, fedora_model_namespace)
             objRelsExt.addRelationship('isMemberOfCollection', collection_pid)
             objRelsExt.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:sp_large_image_cmodel')
             objRelsExt.update()
