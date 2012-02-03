@@ -78,6 +78,12 @@ if __name__ == '__main__':
         logging.error('Error connecting to fedora, exiting'+'\n')
         sys.exit()
 
+    #get bookID - TODO grab the folder name which should be the oclc number for a book - need to look for multi-volume books
+    books_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/books')
+    if not os.path.isdir(books_directory):
+       logging.error('books_directory invalid \n')
+       sys.exit()
+       
     #setup the directories
     mods_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/books/$bookID/Metadata')
     if not os.path.isdir(mods_directory):
@@ -149,7 +155,7 @@ if __name__ == '__main__':
             
             #add relationships
             collection_object_RELS_EXT = fedora_relationships.rels_ext(collection_object, fedora_model_namespace)
-            collection_object_RELS_EXT.addRelationship('isMemberOfCollection','islandora:root')
+            collection_object_RELS_EXT.addRelationship('isMemberOf','islandora:root')
             collection_object_RELS_EXT.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:collectionCModel')
             collection_object_RELS_EXT.update()
 
@@ -199,25 +205,8 @@ if __name__ == '__main__':
             #
             #then ingest transformed dc
 
-            #add fits datastream
-
-            fits_file = book_name + '-FITS.xml'
-            fits_file_path = os.path.join(source_directory, 'fits', fits_file)
-            fits_file_handle = open(fits_file_path)
-            fits_contents = fits_file_handle.read()
-
-            try:
-                book_object.addDataStream(u'FITS', unicode(fits_contents), label = u'FITS',
-                mimeType = u'text/xml', controlGroup = u'X',
-                logMessage = u'Added fits meta data.')
-                logging.info('Added FITS datastream to:' + book_pid)
-            except FedoraConnectionException:
-                logging.error('Error in adding FITS datastream to:' + book_pid + '\n')
-            fits_file_handle.close()
-            
-            #add tif datastream
+            #add tif datastream - individual book pages
            
-            #book_name = mods_file[:mods_file.find('.')] 
             tif_file = book_name + '.tif'
             tif_file_path = os.path.join(source_directory, 'tif', tif_file)
             tif_file_handle = open(tif_file_path, 'rb')
@@ -233,82 +222,171 @@ if __name__ == '__main__':
                 logging.error('Error in adding TIFF datastream to:' + book_pid + '\n')
             tif_file_handle.close()
             
-            #add jpg medium datastream
+            #add BatchProcess xml
             
-            #book_name = mods_file[:mods_file.find('.')]
-            jpg_med_file = book_name + '.jpg'
-            jpg_med_file_path = os.path.join(source_directory, 'jpg_medium', jpg_med_file)
-            jpg_med_file_handle = open(jpg_med_file_path, 'rb')
+            batchProcess_file = book_name + '_BatchProcess.xml'
+            batchProcess_file_path = os.path.join(source_directory, 'MetaData', )
+            batchProcess_file_handle = open(batchProcess_file_path)
+            batchProcess_contents = batchProcess_file_handle.read()
 
             try:
-                book_object.addDataStream(u'JPG', u'aTmpStr', label=u'JPG',
-                mimeType = u'image/jpeg', controlGroup = u'M',
-                logMessage = u'Added JPG medium datastream.')
-                datastream = book_object['JPG'] #double check datastream name w/large image solution pack
-                datastream.setContent(jpg_med_file_handle)
-                logging.info('Added JPG medium datastream to:' + book_pid)
+                book_object.addDataStream(u'BATCHPROCESS', unicode(batchProcess_contents), label = u'BATCHPROCESS',
+                mimeType = u'text/xml', controlGroup = u'X',
+                logMessage = u'Added Batch Process metadata.')
+                logging.info('Added Batch Process datastream to:' + book_pid)
             except FedoraConnectionException:
-                logging.error('Error in adding JPG medium  datastream to:' + book_pid + '\n')
-            jpg_med_file_handle.close()
+                logging.error('Error in adding Batch Process datastream to:' + book_pid + '\n')
+            batchProcess_file_handle.close()
 
-            #add jpg thumbnail datastream
-           
-            #book_name = mods_file[:mods_file.find('.')]
-            jpg_thumb_file = book_name + '.jpg'
-            jpg_thumb_file_path = os.path.join(source_directory, 'jpg_thumb', jpg_thumb_file)
-            jpg_thumb_file_handle = open(jpg_thumb_file_path, 'rb')
+            #add BookMetadata xml
+            
+            bookMetadata_file = book_name + '_BookMetadata.xml'
+            bookMetadata_file_path = os.path.join(source_directory, 'MetaData', )
+            bookMetadata_file_handle = open(bookMetadata_file_path)
+            bookMetadata_contents = bookMetadata_file_handle.read()
 
             try:
-                book_object.addDataStream(u'TN', u'aTmpStr', label=u'TN',
-                mimeType = u'image/jpeg', controlGroup = u'M',
-                logMessage = u'Added JPG thumb datastream.')
-                datastream = book_object['TN'] 
-                datastream.setContent(jpg_thumb_file_handle)
-                logging.info('Added JPG thumb datastream to:' + book_pid)
+                book_object.addDataStream(u'BOOKMETADATA', unicode(bookMetadata_contents), label = u'BOOKMETADATA',
+                mimeType = u'text/xml', controlGroup = u'X',
+                logMessage = u'Added Book Metadata.')
+                logging.info('Added Book Metadata datastream to:' + book_pid)
             except FedoraConnectionException:
-                logging.error('Error in adding JPG thumb datastream to:' + book_pid + '\n')
-            jpg_thumb_file_handle.close()
-
-            #add jp2 lossy datastream
-
-            #book_name = mods_file[:mods_file.find('.')]
-            jp2_lossy_file = book_name + '.jp2'
-            jp2_lossy_file_path = os.path.join(source_directory, 'jp2_lossy', jp2_lossy_file)
-            jp2_lossy_file_handle = open(jp2_lossy_file_path, 'rb')
+                logging.error('Error in adding Book Metadata datastream to:' + book_pid + '\n')
+            bookMetadata_file_handle.close()
+            
+            #add Manifest xml
+            
+            manifest_file = book_name + '_Manifest.xml'
+            manifest_file_path = os.path.join(source_directory, 'MetaData', )
+            manifest_file_handle = open(manifest_file_path)
+            manifest_contents = manifest_file_handle.read()
 
             try:
-                book_object.addDataStream(u'JP2', u'aTmpStr', label=u'JP2',
-                mimeType = u'image/jp2', controlGroup = u'M',
-                logMessage = u'Added JP2 lossy datastream.')
-                datastream = book_object['JP2'] 
-                datastream.setContent(jp2_lossy_file_handle)
-                logging.info('Added JP2 lossy datastream to:' + book_pid)
+                book_object.addDataStream(u'MANIFEST', unicode(manifest_contents), label = u'MANIFEST',
+                mimeType = u'text/xml', controlGroup = u'X',
+                logMessage = u'Added manifest.')
+                logging.info('Added manifest datastream to:' + book_pid)
             except FedoraConnectionException:
-                logging.error('Error in adding JP2 lossy datastream to:' + book_pid + '\n')
-            jp2_lossy_file_handle.close()
+                logging.error('Error in adding manifest datastream to:' + book_pid + '\n')
+            manifest_file_handle.close()
 
-            #add jp2 lossless datastream
+            #add MARC xml
 
-            #book_name = mods_file[:mods_file.find('.')]
-            jp2_lossless_file = book_name + '.jp2'
-            jp2_lossless_file_path = os.path.join(source_directory, 'jp2_lossless', jp2_lossless_file)
-            jp2_lossless_file_handle = open(jp2_lossless_file_path, 'rb')
+            mrcXML_file = book_name + '_MRC.xml'
+            mrcXML_file_path = os.path.join(source_directory, 'Metadata', )
+            mrcXML_file_handle = open(mrcXML_file_path)
+            mrcXML_contents = manifest_file_handle.read()
 
             try:
-                book_object.addDataStream(u'LOSSLESS_JP2', u'aTmpStr', label=u'LOSSLESS_JP2',
-                mimeType = u'image/jp2', controlGroup = u'M',
-                logMessage = u'Added JP2 lossless datastream.')
-                datastream = book_object['LOSSLESS_JP2'] 
-                datastream.setContent(jp2_lossless_file_handle)
-                logging.info('Added JP2 lossless datastream to:' + book_pid)
-            except FedoraConnectionException:
-                logging.error('Error in adding lossless datastream to:' + book_pid + '\n')
-            jp2_lossless_file_handle.close()
+                book_object.addDataStream(u'MRCXML', unicode(mrcXML_contents), label = u'MRCXML',
+                mimeType = u'text/xml', controlGroup = u'X',
+                logMessage = u'Added Marc XML.')
+                logging.info('Added Marc XML datastream to:' + book_pid)
+           except FedoraConnectionException:
+                logging.error('Error in adding Marc XML datastream to:' + book_pid + '\n')
+           mrcXML_file_handle.close()
 
-	    #add relationships
-            objRelsExt = fedora_relationships.rels_ext(book_object, fedora_model_namespace)
+           #add ProcJob xml
+
+           procJob_file = book_name + '_ProcJob.xml'
+           procJob_file_path = os.path.join(source_directory, 'Metadata', )
+           procJob_file_handle = open(procJob_file_path)
+           procJob_contents = procJob_file_handle.read()
+
+           try:
+               book_object.addDataStream(u'PROCJOB', unicode(procJob_contents), label = u'PROCJOB',
+               mimeType = u'text/xml', controlGroup = u'X',
+               logMessage = u'Added ProcJob xml.')
+               logging.info('Added ProcJob xml datastream to:' + book_pid)
+            except FedoraConnectionException:
+                logging.error('Error in adding ProcJob datastream to:' + book_pid + '\n')
+            procJob_file_handle.close()
+            
+
+            #add ScanJob xml
+
+            scanJob_file = book_name + '_ScanJob.xml'
+            scanJob_file_path = os.path.join(source_directory, 'Metadata', )
+            scanJob_file_handle open(scanJob_file_path)
+            scanJob_contents = scanJob_file_handle.read()
+
+            try:
+                book_object.addDataStream(u'SCANJOB', unicode(scanJob_contents), label = u'SCANJOB',
+                mimeType = u'text/xml', controlGroup = u'X',
+                logMessage = u'Added ScanJob xml.')
+                logging.info('Added ScanJob xml datasream to:' + book_pid)
+            except FedoraConnectionException:
+                logging.error('Error in adding ProcJob datastream to:' + book_pid + '\n')
+            scanJob_file_handle.close()
+
+            # add Mets xml
+
+            mets_file = book_name + '_METS.xml'
+            mets_file_path = os.path.join(source_directory, 'Metadata', )
+            mets_file_handle = open(mets_file_path)
+            mets_contents = mets_file_handle.read()
+
+            try:
+                book_object.addDataStream(u'METS', unicode(mets_contents), label = u'METS',
+                mimeType = u'text/xml', controlGroup = u'X',
+                logMessage = u'Added METS xml.')
+                logging.info('Added METS xml datastream to:' + book_pid)
+            except FedoraConnectionException:
+                logging.error('Error in adding METS datastream to:' book_pid + '\n')
+            mets_contents = mets_file_handle.close()
+
+            # add RefNum xml
+
+            refNum_file = book_name + '_RefNum.xml'
+            refNum_file_path = os.path.join(source_directory, 'Metadata', )
+            refNum_file_handle = open(refNum_file_path)
+            refNum_contents = refNum_file_handle.read()
+
+            try:
+                book_object.addDataStream(u'REFNUM', unicode(refNum_contents), label = u'REFNUM',
+                mimeType = u'text/xml', controlGroup = u'X',
+                logMessage = u'Added refNum xml.')
+                logging.info('Added refNum xml datastream to:' + book_pid)
+            except FedoraConnectionException:
+                logging.error('Error in adding refNum datastream to:' book_pid + '\n')
+            refNum_contents = refNum_file_handle.close()
+
+            # add OCRJob.xml
+
+            ocrJob_file = 'OCRJob.xml'
+            ocrJob_file_path = os.path.join(source_directory, 'Metadata', )
+            ocrJob_file_handle = open(ocrJob_file_path)
+            ocrJob_contents = ocrJob_file_handle.read()
+
+            try:
+                book_object.addDataStream(u'OCRJOB', unicode(ocrJob_contetns, label = u'OCRJOB',
+                mimeType = u'text/xml', controlGroup = u'X',
+                logMessage = u'Added OCRJob xml.')
+                logging.info('Added OCRJob xml datastream to: ' + book_pid)
+            except FedoraConnectionException:
+                logging.error('Error in adding OCRJob datastream to:' book_pid + '\n')
+            ocrJob_contents = ocrJob_file_handle.close()
+
+            # add MIX xml
+
+            # add OCR position files
+
+            # add OCR text files
+
+            # add missing pages log
+
+            # add mrc record
+
+            # add foldout log
+
+            # add pdf file
+
+            # add DC xml !!! probably best to a transform on the mods file ingest instead of ingesting generated DC file?
+
+      #add relationships
+            objRelsExt = fedora_relationships.rels_ext(map_object, fedora_model_namespace)
             objRelsExt.addRelationship('isMemberOfCollection', collection_pid)
-            objRelsExt.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:sp_large_image_cmodel')
+            objRelsExt.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:sp_macbooks_cmodel')
             objRelsExt.update()
-            
-    sys.exit()
+
+      sys.exit()
