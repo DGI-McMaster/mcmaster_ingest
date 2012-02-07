@@ -160,19 +160,22 @@ if __name__ == '__main__':
                 logging.error('Error in adding MODS datastream to:' + map_pid + '\n')
 
             #add Dublin Core Record for this object datastream
-            #replicate this php code:
-            #$xsl = new DomDocument();
-            #$xsl->load($path . '/xslt/mods_to_dc.xsl');
-            #$input = new DomDocument();
-            #$input->loadXML(trim($xmlstr));
-            #$xsl = $proc->importStylesheet($xsl);
-            #$newdom = $proc->transformToDoc($input);
-            #$dc_xml = $newdom->saveXML();
-            #
-            #then ingest transformed dc
+            xslt_file = open('xslt/mods_to_dc.xsl', 'r')
+						modsToDC = etree.XSLT(etree.XML(xslt_file.read())
+						xslt_file.close()
+						modsDoc = etree.parse(StringIO(mods_contents))
+						dcOut = modsToDC(modsDoc)
+
+						#then ingest transformed dc
+						try:
+							map_object.addDataStream(u'DC', unicode(dcOut), label = u'DC',
+								mimeType = u'text/xml', controlGroup = u'X',
+								logMessage = u'Added DC metadata.')
+							logging.info('Added DC steam to: ' + map_pid)
+						except FedoraConnectionException:
+							logging.error('Error in adding DC datastream to: ' + map_pid + '\n')
 
             #add fits datastream
-
             fits_file = map_name + '-FITS.xml'
             fits_file_path = os.path.join(source_directory, 'fits', fits_file)
             fits_file_handle = open(fits_file_path)
