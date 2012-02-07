@@ -162,7 +162,7 @@ if __name__ == '__main__':
 
             #add Dublin Core Record for this object datastream
             xslt_file = open('xslt/mods_to_dc.xsl', 'r')
-	    modsToDC = etree.XSLT(etree.XML(xslt_file.read())
+	    modsToDC = etree.XSLT(etree.XML(xslt_file.read()))
 	    xslt_file.close()
 	    modsDoc = etree.parse(StringIO(mods_contents))
 	    dcOut = modsToDC(modsDoc)
