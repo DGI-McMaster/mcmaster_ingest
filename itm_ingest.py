@@ -9,6 +9,7 @@ from fcrepo.connection import Connection, FedoraConnectionException
 from fcrepo.client import FedoraClient
 from islandoraUtils.metadata import fedora_relationships
 from lxml import etree
+from StringIO import StringIO
 
 if __name__ == '__main__':
     if len(sys.argv) == 2:
