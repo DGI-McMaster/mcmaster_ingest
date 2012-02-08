@@ -152,7 +152,7 @@ if __name__ == '__main__':
             #create a map object
             map_pid = fedora.getNextPID(name_space)
 	    map_object = fedora.createObject(map_pid, label = map_label)
-            print map_pid "\n"
+            print(map_pid)
 
 	    #add mods datastream
             
@@ -167,7 +167,7 @@ if __name__ == '__main__':
 
             #add fits datastream
 
-            fits_file = map_name + '-FITS.xml'
+            fits_file = map_name + '-fits.xml'
             fits_file_path = os.path.join(source_directory, 'fits', fits_file)
             fits_file_handle = open(fits_file_path)
             fits_contents = fits_file_handle.read()
@@ -185,7 +185,7 @@ if __name__ == '__main__':
 
             macrepo_file = map_name + '-MACREPO.xml'
             macrepo_file_path = os.path.join(source_directory, 'macrepo', macrepo_file)
-            macrepo_file_handle = open(mcarepo_file_path)
+            macrepo_file_handle = open(macrepo_file_path)
             macrepo_contents = macrepo_file_handle.read()
 
             try:

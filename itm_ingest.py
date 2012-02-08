@@ -160,22 +160,6 @@ if __name__ == '__main__':
             except FedoraConnectionException:
                 logging.error('Error in adding MODS datastream to:' + map_pid + '\n')
 
-            #add Dublin Core Record for this object datastream
-            xslt_file = open('xslt/mods_to_dc.xsl', 'r')
-	    modsToDC = etree.XSLT(etree.XML(xslt_file.read()))
-	    xslt_file.close()
-	    modsDoc = etree.parse(StringIO(mods_contents))
-	    dcOut = modsToDC(modsDoc)
-
-	    #then ingest transformed dc
-	    try:
-	        map_object.addDataStream(u'DC', unicode(dcOut), label = u'Dublin Core Record for this object',
-		mimeType = u'text/xml', controlGroup = u'X',
-		logMessage = u'Added DC metadata.')
-		logging.info('Added DC steam to: ' + map_pid)
-	    except FedoraConnectionException:
-	      logging.error('Error in adding DC datastream to: ' + map_pid + '\n')
-
             #add fits datastream
             fits_file = map_name + '-FITS.xml'
             fits_file_path = os.path.join(source_directory, 'fits', fits_file)
