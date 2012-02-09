@@ -184,7 +184,7 @@ if __name__ == '__main__':
             #add macrepo datastream
 
             macrepo_file = map_name + '-MACREPO.xml'
-            macrepo_file_path = os.path.join(source_directory, 'macrepo', fits_file)
+            macrepo_file_path = os.path.join(source_directory, 'macrepo', macrepo_file)
             macrepo_file_handle = open(macrepo_file_path)
             macrepo_contents = macrepo_file_handle.read()
 
