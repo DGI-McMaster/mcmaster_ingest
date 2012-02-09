@@ -53,6 +53,17 @@ if __name__ == '__main__':
     # Once a book is ingested, it should be bagged. The bag metadata should be pulled from the MODS or MRC xml file.
     # Once the book is ingested and bagged, it should be moved to the the 'preservation' directory on the storage array
 
+    ## OTHER TODOS ##
+    # Grab folder name from book directory - should only grab the number
+    # i'm not concerned with multivolume works right now.
+    # sub-folder check
+    #   - > make sure there are four sub-folders (images, ocr, metadata, pdf)
+    #   - > can't worry about case sensitivity because the machine and people are not consistent
+    # grab and ingest ALL of the datastreams
+    # after a book is ingested, throw it in a bag.
+    #   - > grab mods title and identifier fields for external description
+    # $$$ PROFIT
+
     #configure logging
     log_directory = os.path.join(source_directory,'logs')
     if not os.path.isdir(log_directory):
@@ -79,55 +90,40 @@ if __name__ == '__main__':
         sys.exit()
 
     #get bookID - TODO grab the folder name which should be the oclc number for a book - need to look for multi-volume books
+    
+    #setup the directories
     books_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/books')
     if not os.path.isdir(books_directory):
        logging.error('books_directory invalid \n')
        sys.exit()
        
-    #setup the directories
     mods_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/books/$bookID/Metadata')
     if not os.path.isdir(mods_directory):
         logging.error('MODS directory invalid \n')
         sys.exit()
     
-    tif_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/ITM/tif')
-    if not os.path.isdir(tif_directory):
-        logging.error('TIF directory invalid \n')
-        sys.exit()
-
-    jpg_med_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/ITM/jpg_medium')
-    if not os.path.isdir(jpg_med_directory):
-        logging.error('JPG medium directory invalid \n')
-        sys.exit()
-
-    jpg_thumb_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/ITM/jpg_thumb')
-    if not os.path.isdir(jpg_thumb_directory):
-        logging.error('JPG thumbnail directory invalid \n')
-        sys.exit()    
-
-    jp2_lossy_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/ITM/jp2_lossy')
-    if not os.path.isdir(jp2_lossy_directory):
-        logging.error('JP2 lossy directory invalid \n')
         sys.exit()
     
-    jp2_lossless_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/ITM/jp2_lossless')
-    if not os.path.isdir(jp2_lossless_directory):
-        logging.error('JP2 lossless directory invalid \n')
+    pdf_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/ITM/pdf')
+    if not os.path.isdir(pdf_directory):
+        logging.error('PDF directory invalid \n')
         sys.exit()
-   
-    fits_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/ITM/fits')
-    if not os.path.isdir(fits_directory):
-      logging.error('FITS directroy invalid \n')
-      sys.exit()
+
+    images_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/ITM/images')
+    if not os.path.isdir(images_directory):
+        logging.error('IMAGES medium directory invalid \n')
+        sys.exit()
+
+    ocr_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/ITM/ocr')
+    if not os.path.isdir(ocr_directory):
+        logging.error('OCR thumbnail directory invalid \n')
+        sys.exit()    
     
     #prep data structures (files)
-    mods_files = os.listdir(mods_directory)
-    tif_files = os.listdir(tif_directory)
-    jpg_med_files = os.listdir(jpg_med_directory)
-    jpg_thumb_files = os.listdir(jpg_thumb_directory)
-    jp2_lossy_files = os.listdir(jp2_lossy_directory)
-    jp2_lossless_files = os.listdir(jp2_lossless_directory)
-    fits_files = os.listdir(fits_directory)
+    metadata_files = os.listdir(metadata_directory)
+    pdf_files = os.listdir(pdf_directory)
+    images_files = os.listdir(images_directory)
+    ocr_files = os.listdir(ocr_directory)
     
     name_space = u'macrepo'
     
@@ -136,7 +132,7 @@ if __name__ == '__main__':
     '''
     #put in the book object
     try:
-        collection_label = u'15'
+        collection_label = u'192'
         collection_pid = unicode(name_space + ':' + collection_label)
         collection_policy = u'<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd"> <content_models> <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"/> <content_model dsid="ISLANDORACM" name="Islandora large image content model" namespace="macrepo:1" pid="islandora:sp_large_image_cmodel"/> </content_models> <search_terms/> <staging_area/> <relationship>isMemberOfCollection</relationship> </collection_policy> '
         fedora.getObject(collection_pid)
@@ -156,6 +152,22 @@ if __name__ == '__main__':
             #add relationships
             collection_object_RELS_EXT = fedora_relationships.rels_ext(collection_object, fedora_model_namespace)
             collection_object_RELS_EXT.addRelationship('isMemberOf','islandora:root')
+            collection_object_RELS_EXT.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:collectionCModel')
+            collection_object_RELS_EXT.update()
+
+    #loop through the mods folder
+    for mods_file in mods_files:
+        if mods_file.endswith('-MODS.xml'):
+            #get mods file contents
+            mods_file_path = os.path.join(source_directory, 'mods', mods_file)
+            mods_file_handle = open(mods_file_path)
+            mods_contents = mods_file_handle.read()
+           
+            #get book_label from mods title
+            mods_tree = etree.parse(mods_file_path)
+            book_label = mods_tree.xpath("*[local-name() = 'titleInfo']/*[local-name() = 'title']/text()")
+            book_label = map_label[0]
+            if len(book_label) > 255:
             collection_object_RELS_EXT.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:collectionCModel')
             collection_object_RELS_EXT.update()
 
@@ -193,18 +205,6 @@ if __name__ == '__main__':
             except FedoraConnectionException:
                 logging.error('Error in adding MODS datastream to:' + book_pid + '\n')
 
-            #add Dublin Core Record for this object datastream
-            #replicate this php code:
-            #$xsl = new DomDocument();
-            #$xsl->load($path . '/xslt/mods_to_dc.xsl');
-            #$input = new DomDocument();
-            #$input->loadXML(trim($xmlstr));
-            #$xsl = $proc->importStylesheet($xsl);
-            #$newdom = $proc->transformToDoc($input);
-            #$dc_xml = $newdom->saveXML();
-            #
-            #then ingest transformed dc
-
             #add tif datastream - individual book pages
            
             tif_file = book_name + '.tif'
@@ -234,34 +234,6 @@ if __name__ == '__main__':
                 mimeType = u'text/xml', controlGroup = u'X',
                 logMessage = u'Added Batch Process metadata.')
                 logging.info('Added Batch Process datastream to:' + book_pid)
-            except FedoraConnectionException:
-                logging.error('Error in adding Batch Process datastream to:' + book_pid + '\n')
-            batchProcess_file_handle.close()
-
-            #add BookMetadata xml
-            
-            bookMetadata_file = book_name + '_BookMetadata.xml'
-            bookMetadata_file_path = os.path.join(source_directory, 'MetaData', )
-            bookMetadata_file_handle = open(bookMetadata_file_path)
-            bookMetadata_contents = bookMetadata_file_handle.read()
-
-            try:
-                book_object.addDataStream(u'BOOKMETADATA', unicode(bookMetadata_contents), label = u'BOOKMETADATA',
-                mimeType = u'text/xml', controlGroup = u'X',
-                logMessage = u'Added Book Metadata.')
-                logging.info('Added Book Metadata datastream to:' + book_pid)
-            except FedoraConnectionException:
-                logging.error('Error in adding Book Metadata datastream to:' + book_pid + '\n')
-            bookMetadata_file_handle.close()
-            
-            #add Manifest xml
-            
-            manifest_file = book_name + '_Manifest.xml'
-            manifest_file_path = os.path.join(source_directory, 'MetaData', )
-            manifest_file_handle = open(manifest_file_path)
-            manifest_contents = manifest_file_handle.read()
-
-            try:
                 book_object.addDataStream(u'MANIFEST', unicode(manifest_contents), label = u'MANIFEST',
                 mimeType = u'text/xml', controlGroup = u'X',
                 logMessage = u'Added manifest.')
@@ -340,6 +312,34 @@ if __name__ == '__main__':
             refNum_file = book_name + '_RefNum.xml'
             refNum_file_path = os.path.join(source_directory, 'Metadata', )
             refNum_file_handle = open(refNum_file_path)
+                mimeType = u'text/xml', controlGroup = u'X',
+                logMessage = u'Added ScanJob xml.')
+                logging.info('Added ScanJob xml datasream to:' + book_pid)
+            except FedoraConnectionException:
+                logging.error('Error in adding ProcJob datastream to:' + book_pid + '\n')
+            scanJob_file_handle.close()
+
+            # add Mets xml
+
+            mets_file = book_name + '_METS.xml'
+            mets_file_path = os.path.join(source_directory, 'Metadata', )
+            mets_file_handle = open(mets_file_path)
+            mets_contents = mets_file_handle.read()
+
+            try:
+                book_object.addDataStream(u'METS', unicode(mets_contents), label = u'METS',
+                mimeType = u'text/xml', controlGroup = u'X',
+                logMessage = u'Added METS xml.')
+                logging.info('Added METS xml datastream to:' + book_pid)
+            except FedoraConnectionException:
+                logging.error('Error in adding METS datastream to:' book_pid + '\n')
+            mets_contents = mets_file_handle.close()
+
+            # add RefNum xml
+
+            refNum_file = book_name + '_RefNum.xml'
+            refNum_file_path = os.path.join(source_directory, 'Metadata', )
+            refNum_file_handle = open(refNum_file_path)
             refNum_contents = refNum_file_handle.read()
 
             try:
@@ -380,8 +380,6 @@ if __name__ == '__main__':
             # add foldout log
 
             # add pdf file
-
-            # add DC xml !!! probably best to a transform on the mods file ingest instead of ingesting generated DC file?
 
       #add relationships
             objRelsExt = fedora_relationships.rels_ext(map_object, fedora_model_namespace)
