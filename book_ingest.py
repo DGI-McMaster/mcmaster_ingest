@@ -96,12 +96,25 @@ if __name__ == '__main__':
     if not os.path.isdir(books_directory):
        logging.error('books_directory invalid \n')
        sys.exit()
-       
+    
+		def listdir_nohidden(path):
+			""" List directory contents, omitting hidden files """
+			for f in os.listdir(path):
+				if not f.startswith('.'):
+					yield f
+
+		# Check that correct subfolders PDF, METADATA, and IMAGES exist in each object folder
+		subfolders = listdir_nohidden(books_directory)
+		subfolders = [books_directory + os.path.sep + subfolder for subfolder in subfolders]
+		for folder in subfolders:
+			expected_folders = ['PDF', 'METADATA', 'IMAGES']
+				if not set(listdir_nohidden(folder)) & set(expected_folders):
+					logging.error('asdf')
+					sys.exit()
+
     mods_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/books/$bookID/Metadata')
     if not os.path.isdir(mods_directory):
         logging.error('MODS directory invalid \n')
-        sys.exit()
-    
         sys.exit()
     
     pdf_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/ITM/pdf')
