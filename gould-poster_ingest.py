@@ -1,6 +1,6 @@
 '''
 Created on January 24, 2012
-This file handles the batch ingest of the Italian topographical map collection for McMaster University Libray
+This file handles the batch ingest of the Italian topographical map collection for McMaster University Ligould-posteray
 @adapted from Will Panting's Hamilton College ingest script (https://github.com/DGI-Hamilton-College/Hamilton_ingest)
 @author: Nick Ruest
 '''
@@ -9,7 +9,6 @@ from fcrepo.connection import Connection, FedoraConnectionException
 from fcrepo.client import FedoraClient
 from islandoraUtils.metadata import fedora_relationships
 from lxml import etree
-import urlparse, urllib
 
 if __name__ == '__main__':
     if len(sys.argv) == 2:
@@ -30,7 +29,7 @@ if __name__ == '__main__':
     log_directory = os.path.join(source_directory,'logs')
     if not os.path.isdir(log_directory):
         os.mkdir(log_directory)
-    logFile = os.path.join(log_directory,'/big2/dc/Digital-Collections/archival-objects/scw' + time.strftime('%y_%m_%d') + '.log')
+    logFile = os.path.join(log_directory,'/big2/dc/Digital-Collections/archival-objects/gould-poster' + time.strftime('%y_%m_%d') + '.log')
     logging.basicConfig(filename=logFile, level=logging.DEBUG)
 
     #get config
@@ -52,42 +51,42 @@ if __name__ == '__main__':
         sys.exit()
 
     #setup the directories
-    mods_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/mods')
+    mods_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/gould-poster/mods')
     if not os.path.isdir(mods_directory):
         logging.error('MODS directory invalid \n')
         sys.exit()
     
-    tif_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/tif')
+    tif_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/gould-poster/tif')
     if not os.path.isdir(tif_directory):
         logging.error('TIF directory invalid \n')
         sys.exit()
 
-    jpg_med_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/jpg_medium')
+    jpg_med_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/gould-poster/jpg_medium')
     if not os.path.isdir(jpg_med_directory):
         logging.error('JPG medium directory invalid \n')
         sys.exit()
 
-    jpg_thumb_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/jpg_thumb')
+    jpg_thumb_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/gould-poster/jpg_thumb')
     if not os.path.isdir(jpg_thumb_directory):
         logging.error('JPG thumbnail directory invalid \n')
         sys.exit()    
 
-    jp2_lossy_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/jp2_lossy')
+    jp2_lossy_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/gould-poster/jp2_lossy')
     if not os.path.isdir(jp2_lossy_directory):
         logging.error('JP2 lossy directory invalid \n')
         sys.exit()
     
-    jp2_lossless_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/jp2_lossless')
+    jp2_lossless_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/gould-poster/jp2_lossless')
     if not os.path.isdir(jp2_lossless_directory):
         logging.error('JP2 lossless directory invalid \n')
         sys.exit()
    
-    fits_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/fits')
+    fits_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/gould-poster/fits')
     if not os.path.isdir(fits_directory):
       logging.error('FITS directroy invalid \n')
       sys.exit()
 
-    macrepo_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/macrepo')
+    macrepo_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/gould-poster/macrepo')
     if not os.path.isdir(macrepo_directory):
       logging.error('MACREPO directroy invalid \n')
       sys.exit()
@@ -109,7 +108,7 @@ if __name__ == '__main__':
     '''
     #put in the World War, 1914-1918, aerial photograph object
     try:
-        collection_label = u'5624'
+        collection_label = u'5721'
         collection_pid = unicode(name_space + ':' + collection_label)
         collection_policy = u'<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd"> <content_models> <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"/> <content_model dsid="ISLANDORACM" name="Islandora large image content model" namespace="macrepo:1" pid="islandora:sp_large_image_cmodel"/> </content_models> <search_terms/> <staging_area/> <relationship>isMemberOfCollection</relationship> </collection_policy> '
         fedora.getObject(collection_pid)
@@ -147,24 +146,19 @@ if __name__ == '__main__':
             if len(map_label) > 255:
                 map_label = map_label[0:250] + '...'
             #print(map_label)
-            #map_label = unicode(map_label, 'utf-8')
+            map_label = unicode(map_label)
             map_name = mods_tree.xpath("*[local-name() = 'identifier']/text()")[0].strip("\t\n\r")        
  
             #create a map object
             map_pid = fedora.getNextPID(name_space)
-	    #map_object = fedora.createObject(map_pid, label = unicode(map_label))
-	    #map_object = fedora.createObject(map_pid, label = map_label)   
-	    try:
-                map_object = fedora.createObject(map_pid, label = unicode(map_label))
-            except UnicodeEncodeError:
-                print(str(map_label))
-                print(map_pid)
+	    map_object = fedora.createObject(map_pid, label = map_label)
+            print(map_pid)
 
 	    #add mods datastream
             
             mods_file_handle.close()
             try:
-                map_object.addDataStream(u'MODS', mods_contents.decode('utf-8'), label = u'MODS',
+                map_object.addDataStream(u'MODS', unicode(mods_contents), label = u'MODS',
                 mimeType = u'text/xml', controlGroup = u'X',
                 logMessage = u'Added basic mods meta data.')
                 logging.info('Added MODS datastream to:' + map_pid)
