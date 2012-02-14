@@ -86,6 +86,11 @@ if __name__ == '__main__':
       logging.error('FITS directroy invalid \n')
       sys.exit()
 
+    macrepo_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWIAP/macrepo')
+    if not os.path.isdir(macrepo_directory):
+      logging.error('MACREPO directroy invalid \n')
+      sys.exit()
+
     #prep data structures (files)
     mods_files = os.listdir(mods_directory)
     tif_files = os.listdir(tif_directory)
@@ -94,7 +99,8 @@ if __name__ == '__main__':
     jp2_lossy_files = os.listdir(jp2_lossy_directory)
     jp2_lossless_files = os.listdir(jp2_lossless_directory)
     fits_files = os.listdir(fits_directory)
- 
+    macrepo_files = os.listdir(macrepo_directory) 
+
     name_space = u'macrepo'
     
     '''
@@ -175,7 +181,23 @@ if __name__ == '__main__':
                 logging.error('Error in adding FITS datastream to:' + map_pid + '\n')
             fits_file_handle.close()
 
-            #add tif datastream
+            #add macrepo datastream
+
+            macrepo_file = map_name + '-MACREPO.xml'
+            macrepo_file_path = os.path.join(source_directory, 'macrepo', macrepo_file)
+            macrepo_file_handle = open(macrepo_file_path)
+            macrepo_contents = macrepo_file_handle.read()
+
+            try:
+                map_object.addDataStream(u'MACREPO', unicode(macrepo_contents), label = u'MACREPO',
+                mimeType = u'text/xml', controlGroup = u'X',
+                logMessage = u'Added macrepo meta data.')
+                logging.info('Added macrepo datastream to:' + map_pid)
+            except FedoraConnectionException:
+                logging.error('Error in adding MACREPO datastream to:' + map_pid + '\n')
+            macrepo_file_handle.close()
+            
+	    #add tif datastream
            
             tif_file = map_name + '.tif'
             tif_file_path = os.path.join(source_directory, 'tif', tif_file)

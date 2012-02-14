@@ -9,6 +9,7 @@ from fcrepo.connection import Connection, FedoraConnectionException
 from fcrepo.client import FedoraClient
 from islandoraUtils.metadata import fedora_relationships
 from lxml import etree
+import urlparse, urllib
 
 if __name__ == '__main__':
     if len(sys.argv) == 2:
@@ -29,7 +30,7 @@ if __name__ == '__main__':
     log_directory = os.path.join(source_directory,'logs')
     if not os.path.isdir(log_directory):
         os.mkdir(log_directory)
-    logFile = os.path.join(log_directory,'/big2/dc/Digital-Collections/archival-objects/WWITM' + time.strftime('%y_%m_%d') + '.log')
+    logFile = os.path.join(log_directory,'/big2/dc/Digital-Collections/archival-objects/scw' + time.strftime('%y_%m_%d') + '.log')
     logging.basicConfig(filename=logFile, level=logging.DEBUG)
 
     #get config
@@ -51,46 +52,46 @@ if __name__ == '__main__':
         sys.exit()
 
     #setup the directories
-    mods_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWITM/mods')
+    mods_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/mods')
     if not os.path.isdir(mods_directory):
         logging.error('MODS directory invalid \n')
         sys.exit()
     
-    tif_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWITM/tif')
+    tif_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/tif')
     if not os.path.isdir(tif_directory):
         logging.error('TIF directory invalid \n')
         sys.exit()
 
-    jpg_med_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWITM/jpg_medium')
+    jpg_med_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/jpg_medium')
     if not os.path.isdir(jpg_med_directory):
         logging.error('JPG medium directory invalid \n')
         sys.exit()
 
-    jpg_thumb_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWITM/jpg_thumb')
+    jpg_thumb_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/jpg_thumb')
     if not os.path.isdir(jpg_thumb_directory):
         logging.error('JPG thumbnail directory invalid \n')
         sys.exit()    
 
-    jp2_lossy_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWITM/jp2_lossy')
+    jp2_lossy_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/jp2_lossy')
     if not os.path.isdir(jp2_lossy_directory):
         logging.error('JP2 lossy directory invalid \n')
         sys.exit()
     
-    jp2_lossless_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWITM/jp2_lossless')
+    jp2_lossless_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/jp2_lossless')
     if not os.path.isdir(jp2_lossless_directory):
         logging.error('JP2 lossless directory invalid \n')
         sys.exit()
    
-    fits_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWITM/fits')
+    fits_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/fits')
     if not os.path.isdir(fits_directory):
       logging.error('FITS directroy invalid \n')
       sys.exit()
 
-    macrepo_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWITM/macrepo')
-    if not os.path.isdir(fits_directory):
+    macrepo_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/macrepo')
+    if not os.path.isdir(macrepo_directory):
       logging.error('MACREPO directroy invalid \n')
       sys.exit()
-    
+
     #prep data structures (files)
     mods_files = os.listdir(mods_directory)
     tif_files = os.listdir(tif_directory)
@@ -99,22 +100,22 @@ if __name__ == '__main__':
     jp2_lossy_files = os.listdir(jp2_lossy_directory)
     jp2_lossless_files = os.listdir(jp2_lossless_directory)
     fits_files = os.listdir(fits_directory)
-    macrepo_files = os.listdir(macrepo_directory)   
- 
+    macrepo_files = os.listdir(macrepo_directory) 
+
     name_space = u'macrepo'
     
     '''
     do ingest
     '''
-    #put in the World War, 1914-1918, trench map object
+    #put in the World War, 1914-1918, aerial photograph object
     try:
-        collection_label = u'49'
+        collection_label = u'5624'
         collection_pid = unicode(name_space + ':' + collection_label)
         collection_policy = u'<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd"> <content_models> <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"/> <content_model dsid="ISLANDORACM" name="Islandora large image content model" namespace="macrepo:1" pid="islandora:sp_large_image_cmodel"/> </content_models> <search_terms/> <staging_area/> <relationship>isMemberOfCollection</relationship> </collection_policy> '
         fedora.getObject(collection_pid)
     except FedoraConnectionException, object_fetch_exception:
         if object_fetch_exception.httpcode in [404]:
-            logging.info(name_space + ':wwitm missing, creating object.\n')
+            logging.info(name_space + ':wwiap missing, creating object.\n')
             collection_object = fedora.createObject(collection_pid, label = collection_label)
             #collection_policy
             try:
@@ -127,7 +128,7 @@ if __name__ == '__main__':
             
             #add relationships
             collection_object_RELS_EXT = fedora_relationships.rels_ext(collection_object, fedora_model_namespace)
-            collection_object_RELS_EXT.addRelationship('isMemberOfCollection','islandora:root')
+            collection_object_RELS_EXT.addRelationship('isMemberOfCollction','islandora:root')
             collection_object_RELS_EXT.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:collectionCModel')
             collection_object_RELS_EXT.update()
 
@@ -146,19 +147,20 @@ if __name__ == '__main__':
             if len(map_label) > 255:
                 map_label = map_label[0:250] + '...'
             #print(map_label)
-            map_label = unicode(map_label)
+            map_label = unicode(map_label, 'utf-8')
             map_name = mods_tree.xpath("*[local-name() = 'identifier']/text()")[0].strip("\t\n\r")        
  
             #create a map object
             map_pid = fedora.getNextPID(name_space)
-	    map_object = fedora.createObject(map_pid, label = map_label)
+	    map_object = fedora.createObject(map_pid, label = unicode(map_label))
+
             print(map_pid)
 
 	    #add mods datastream
             
             mods_file_handle.close()
             try:
-                map_object.addDataStream(u'MODS', unicode(mods_contents), label = u'MODS',
+                map_object.addDataStream(u'MODS', mods_contents.decode('utf-8'), label = u'MODS',
                 mimeType = u'text/xml', controlGroup = u'X',
                 logMessage = u'Added basic mods meta data.')
                 logging.info('Added MODS datastream to:' + map_pid)
@@ -167,11 +169,11 @@ if __name__ == '__main__':
 
             #add fits datastream
 
-            fits_file = map_name + '-fits.xml'
+            fits_file = map_name + '-FITS.xml'
             fits_file_path = os.path.join(source_directory, 'fits', fits_file)
             fits_file_handle = open(fits_file_path)
             fits_contents = fits_file_handle.read()
-
+            
             try:
                 map_object.addDataStream(u'FITS', unicode(fits_contents), label = u'FITS',
                 mimeType = u'text/xml', controlGroup = u'X',
@@ -192,12 +194,12 @@ if __name__ == '__main__':
                 map_object.addDataStream(u'MACREPO', unicode(macrepo_contents), label = u'MACREPO',
                 mimeType = u'text/xml', controlGroup = u'X',
                 logMessage = u'Added macrepo meta data.')
-                logging.info('Added MACREPO datastream to:' + map_pid)
+                logging.info('Added macrepo datastream to:' + map_pid)
             except FedoraConnectionException:
                 logging.error('Error in adding MACREPO datastream to:' + map_pid + '\n')
             macrepo_file_handle.close()
             
-            #add tif datastream
+	    #add tif datastream
            
             tif_file = map_name + '.tif'
             tif_file_path = os.path.join(source_directory, 'tif', tif_file)

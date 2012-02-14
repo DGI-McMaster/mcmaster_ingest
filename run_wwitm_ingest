@@ -2,7 +2,7 @@
 
 mkdir ./logs 
 
-echo "Running letter ingester: ingest to fedora"
+echo "Running map ingester: ingest to fedora"
 
 python ./wwitm_ingest.py ./ &> ./logs/wwitm_ingest_report.txt
 
