@@ -152,13 +152,7 @@ if __name__ == '__main__':
  
             #create a map object
             map_pid = fedora.getNextPID(name_space)
-	    #map_object = fedora.createObject(map_pid, label = unicode(map_label))
-	    #map_object = fedora.createObject(map_pid, label = map_label)   
-	    try:
-                map_object = fedora.createObject(map_pid, label = unicode(map_label))
-            except UnicodeEncodeError:
-                print(str(map_label))
-                print(map_pid)
+	    map_object = fedora.createObject(map_pid, label = unicode(map_label, 'utf-8'))
 
 	    #add mods datastream
             
