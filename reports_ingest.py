@@ -221,17 +221,12 @@ if __name__ == '__main__':
                 objRelsExt.update()            
                
                 #get the book page datastructures
-                book_page_jp2_files = list()
-                for jp2_file in jp2_files:
-                    if jp2_file[:jp2_file.find('-')] == book_name:
-                        book_page_jp2_files.append(jp2_file)
-                     
-                book_page_tei_files = list()
-                    for tei_page_file in tei_page_files:
-                        if tei_page_file[:tei_page_file.find('_')] == book_name:
-                           book_page_tei_files.append(tei_page_file)
+                report_page_tif_files = list()
+                for tif_file in tif_files:
+                    if tif_file[:tif_file.find('-')] == report_name:
+                        report_page_tif_files.append(report_file)
                 #loop through the jp2 files that are associated with the mods
-                for jp2_file in book_page_jp2_files:
+                for jp2_file in book_page_jp2_files: 
                     #create an object for each
                     page_name = jp2_file[jp2_file.find('-') + 1:jp2_file.find('.')]
                     #page_pid = fedora.getNextPID(name_space)
@@ -242,24 +237,24 @@ if __name__ == '__main__':
                     jp2_file_path = os.path.join(source_directory, 'images-jp2', jp2_file)
                 
                     #add a thumnail to the book if apropriate
-                    if page_name == '001':
+                    if page_name == report + '00000':
                         #create thumbnail
-                        tn_file_path = jp2_file_path + '.jpg'
-                        image_magic_call = ["convert", jp2_file_path, '-compress', 'JPEG', "-thumbnail", "x100", "-gravity", "center", "-extent", "x100", tn_file_path]
+                        tn_file_path = tif_file_path + '.jpg'
+                        image_magic_call = ["convert", tif_file_path, '-compress', 'JPEG', "-thumbnail", "x100", "-gravity", "center", "-extent", "x100", tn_file_path]
                         response = subprocess.call(image_magic_call)
                     
                        #ingest thumbnail
                        #tn_file_path = os.path.join(source_directory, 'images-jp2', jp2_file)
                        tn_file_handle = open(tn_file_path, 'rb')
                        try:
-                           book_object.addDataStream(u'TN', u'aTmpStr', label = u'TN',
+                           report_object.addDataStream(u'TN', u'aTmpStr', label = u'TN',
                            mimeType = u'image/jpg', controlGroup = u'M',
                            logMessage = u'Added TN datastream.')
-                           datastream = book_object['TN']
+                           datastream = page_object['TN']
                            datastream.setContent(tn_file_handle)
-                           logging.info('Added TN datastream to:' + book_pid)
+                           logging.info('Added TN datastream to:' + page_pid)
                        except FedoraConnectionException:
-                           logging.error('Error in adding TN datastream to:' + book_pid + '\n')
+                           logging.error('Error in adding TN datastream to:' + page_pid + '\n')
                        tn_file_handle.close()
                 
                        #add jp2 ds
@@ -274,23 +269,6 @@ if __name__ == '__main__':
                        except FedoraConnectionException:
                            logging.error('Error in adding JP2 datastream to:' + page_pid + '\n')
                        jp2_file_handle.close()
-                
-                       #add tei file from tei-xml/pages, there might not be one
-                       #we have to call these the ocr DS to make them work nice with the viewer
-                       tei_file = book_name + '_TEIP5_page_' + str(int(page_name)) + '.xml'
-                       tei_file_path = os.path.join(source_directory, 'tei-xml/pages', tei_file)
-                       if os.path.isfile(tei_file_path):
-                           tei_file_handle = open(tei_file_path)
-                           tei_contents = tei_file_handle.read()
-                           tei_file_handle.close()
-                       try:
-                           page_object.addDataStream(u'TEI', unicode(tei_contents, encoding = 'UTF-8'), label=u'TEI',
-                           mimeType=u'application/tei+xml', controlGroup=u'M',
-                           logMessage=u'Added basic tei.')
-                           logging.info('Added TEI datastream to:' + page_pid)
-                       except FedoraConnectionException:
-                           logging.error('Error in adding TEI datastream to:' + page_pid + '\n')
-                
                 
                        #add relationships
                        objRelsExt=fedora_relationships.rels_ext(page_object, fedora_model_namespace)
