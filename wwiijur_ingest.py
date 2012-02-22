@@ -77,8 +77,8 @@ if __name__ == '__main__':
         logging.error('TIF directory invalid \n')
         sys.exit()
     
-    fits_page_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWIIJUR/fits')
-    if not os.path.isdir(fits_page_directory):
+    fits_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWIIJUR/fits')
+    if not os.path.isdir(fits_directory):
         logging.error('FITS pages directory invalid \n')
         sys.exit()
     
@@ -95,8 +95,8 @@ if __name__ == '__main__':
     #prep data structures (files)
     mods_files = os.listdir(mods_directory)
     macrepo_files = os.listdir(macrepo_directory)
-    tif_page_files = os.listdir(tif_directory)
-    fits_page_files = os.listdir(fits_directory)
+    tif_files = os.listdir(tif_directory)
+    fits_files = os.listdir(fits_directory)
     jpg_medium_page_files = os.listdir(jpg_medium_directory)
     jpg_thumb_page_files = os.listdir(jpg_thumb_directory)
     jp2_lossless_files = os.listdir(jp2_lossless_directory)
@@ -115,7 +115,7 @@ if __name__ == '__main__':
         fedora.getObject(collection_pid)
     except FedoraConnectionException, object_fetch_exception:
         if object_fetch_exception.httpcode in [404]:
-            logging.info(name_space + ':UnitedStatesCivilWarLetters missing, creating object.\n')
+            logging.info(name_space + ':WWIIJUR missing, creating object.\n')
             collection_object = fedora.createObject(collection_pid, label = collection_label)
             #collection_policy
             try:
@@ -140,91 +140,79 @@ if __name__ == '__main__':
             mods_file_handle = open(mods_file_path)
             mods_contents = mods_file_handle.read()
             
-            #get object_label from mods title
+            #get letter_label from mods title
             mods_tree = etree.parse(mods_file_path)
-            object_label = mods_tree.xpath("*[local-name() = 'titleInfo']/*[local-name() = 'title']/text()")
-            object_label = object_label[0]
-            if len(object_label) > 255:
-                object_label = object_label[0:250] + '...'
-            print(object_label)
-            object_label = unicode(object_label)
-            
-            #create a object object
-            object_pid = fedora.getNextPID(name_space)
-            object_object = fedora.createObject(object_pid, label = object_label)
-            
+            letter_label = mods_tree.xpath("*[local-name() = 'titleInfo']/*[local-name() = 'title']/text()")
+            letter_label = letter_label[0]
+            if len(letter_label) > 255:
+                letter_label = letter_label[0:250] + '...'
+            letter_label = unicode(letter_label)           
+ 
+            #create a letter object
+            letter_pid = fedora.getNextPID(name_space)
+            letter_object = fedora.createObject(letter_pid, label = letter_label)
+            print(letter_pid)           
+ 
             #add mods datastream
             mods_file_handle.close()
             try:
-                object_object.addDataStream(u'MODS', unicode(mods_contents, encoding = 'UTF-8'), label = u'MODS',
+                letter_object.addDataStream(u'MODS', unicode(mods_contents, encoding = 'UTF-8'), label = u'MODS',
                 mimeType = u'text/xml', controlGroup = u'X',
                 logMessage = u'Added basic mods meta data.')
-                logging.info('Added MODS datastream to:' + object_pid)
+                logging.info('Added MODS datastream to:' + letter_pid)
             except FedoraConnectionException:
-                logging.error('Error in adding MODS datastream to:' + object_pid + '\n')
+                logging.error('Error in adding MODS datastream to:' + letter_pid + '\n')
             
-            
-            #add fits ds
-            fits_file = object_name + '-FITS.xml'
-            fits_file_path = os.path.join(source_directory, 'fits', fits_file)
-            fits_file_handle = open(fits_file_path)
-            fits_contents = fits_file_handle.read()
-            fits_file_handle.close()
-            try:
-                object_object.addDataStream(u'FITS', unicode(fits_contents), label=u'FITS',
-                mimeType = u'text/xml', controlGroup=u'M',
-                logMessage = u'Added basic FITS meta data.')
-                logging.info('Added FITS datastream to:' + object_pid)
-            except FedoraConnectionException:
-                logging.error('Error in adding FITS datastream to:' + object_pid + '\n')
-            
+            #letter name
+            letter_name = mods_file[:mods_file.find('-')]
+
             #add macrepo ds
-            macrepo_file = object_name + '-MACREPO.xml'
+            macrepo_file = letter_name + '-MACREPO.xml'
             macrepo_file_path = os.path.join(source_directory, 'macrepo', macrepo_file)
             macrepo_file_handle = open(macrepo_file_path)
             macrepo_contents = macrepo_file_handle.read()
             macrepo_file_handle.close()
             try:
-                object_object.addDataStream(u'MACREPO', unicode(fits_contents, encoding = 'UTF-8'), label=u'MACREPO',
+                letter_object.addDataStream(u'MACREPO', unicode(fits_contents, encoding = 'UTF-8'), label=u'MACREPO',
                 mimeType = u'text/xml', controlGroup=u'M',
                 logMessage = u'Added basic MACREPO meta data.')
-                logging.info('Added MACREPO datastream to:' + object_pid)
+                logging.info('Added MACREPO datastream to:' + letter_pid)
             except FedoraConnectionException:
-                logging.error('Error in adding MACREPO datastream to:' + object_pid + '\n')
+                logging.error('Error in adding MACREPO datastream to:' + letter_pid + '\n')
 
             #add relationships
-            objRelsExt = fedora_relationships.rels_ext(object_object, fedora_model_namespace)
+            objRelsExt = fedora_relationships.rels_ext(letter_object, fedora_model_namespace)
             objRelsExt.addRelationship('isMemberOf', collection_pid)
-            objRelsExt.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:objectCModel')
+            objRelsExt.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:bookCModel')
             objRelsExt.update()
             
             #get the object page datastructures
-            object_page_tif_files = list()
+            letter_page_tif_files = list()
             for tif_file in tif_files:
-                if jp2_file[:tif_file.find('-')] == object_name:
-                    object_page_tif_files.append(tif_file)
+                if jp2_file[:tif_file.find('-')] == letter_name:
+                    letter_page_tif_files.append(tif_file)
 
 
-            object_page_jp2_lossy_thumb_files = list()
+            letter_page_jp2_lossy_thumb_files = list()
             for jp2_lossy_file in jp2_lossy_files:
-                if jp2_lossy_file[:jp2_lossy_file.find('-')] == object_name:
-                    object_page_jp2_lossy_files.append(jp2_lossy_file)
+                if jp2_lossy_file[:jp2_lossy_file.find('-')] == letter_name:
+                    letter_page_jp2_lossy_files.append(jp2_lossy_file)
 
-            object_page_jp2_lossless_files = list()
+            letter_page_jp2_lossless_files = list()
             for jp2_lossless_file in jp2_lossless_files:
-                if jpg_thumb_file[:jp2_lossless_file.find('-')] == object_name:
-                    object_page_jp2_lossless_files.append(jp2_lossless_file)
+                if jpg_thumb_file[:jp2_lossless_file.find('-')] == letter_name:
+                    letter_page_jp2_lossless_files.append(jp2_lossless_file)
                     
             #loop through the jp2 files that are associated with the mods
-            for tif_file in object_page_tif_files:
+            for tif_file in letter_page_tif_files:
                 #create an object for each
                 page_name = tif_file[tif_file.find('-') + 1:tif_file.find('.')]
                 #page_pid = fedora.getNextPID(name_space)
-                page_label = object_label + '-' + page_name
-                page_pid = name_space + object_pid[object_pid.find(':'):] + '-' + page_name
+                page_label = letter_label + '-' + page_name
+                page_pid = name_space + letter_pid[letter_pid.find(':'):] + '-' + page_name
                 page_label = unicode(page_label)
                 page_object = fedora.createObject(page_pid, label = page_label)
-                jp2_file_path = os.path.join(source_directory, 'tif', tif_file)
+                tif_file_path = os.path.join(source_directory, 'tif', tif_file)
                 
                 #add a thumnail to the object if apropriate
                 if page_name == '001':
@@ -237,14 +225,14 @@ if __name__ == '__main__':
                     #tn_file_path = os.path.join(source_directory, 'tif', tif_file)
                     tn_file_handle = open(tn_file_path, 'rb')
                     try:
-                        object_object.addDataStream(u'TN', u'aTmpStr', label = u'TN',
+                        letter_object.addDataStream(u'TN', u'aTmpStr', label = u'TN',
                         mimeType = u'image/jpg', controlGroup = u'M',
                         logMessage = u'Added TN datastream.')
-                        datastream = object_object['TN']
+                        datastream = letter_object['TN']
                         datastream.setContent(tn_file_handle)
-                        logging.info('Added TN datastream to:' + object_pid)
+                        logging.info('Added TN datastream to:' + letter_pid)
                     except FedoraConnectionException:
-                        logging.error('Error in adding TN datastream to:' + object_pid + '\n')
+                        logging.error('Error in adding TN datastream to:' + letter_pid + '\n')
                     tn_file_handle.close()
                 
                 #add tif ds
@@ -288,7 +276,7 @@ if __name__ == '__main__':
 
 
                 #add fits ds
-                fits_file = object_name + str(int(page_name)) + '-FITS'  + '.xml'
+                fits_file = letter_name + str(int(page_name)) + '-FITS'  + '.xml'
                 fits_file_path = os.path.join(source_directory, 'fits', fits_file)
                 if os.path.isfile(fits_file_path):
                     fits_file_handle = open(fits_file_path)
@@ -305,7 +293,7 @@ if __name__ == '__main__':
                 
                 #add relationships
                 objRelsExt=fedora_relationships.rels_ext(page_object, fedora_model_namespace)
-                objRelsExt.addRelationship('isMemberOf', object_pid)
+                objRelsExt.addRelationship('isMemberOf', letter_pid)
                 objRelsExt.addRelationship(fedora_relationships.rels_predicate('fedora-model','hasModel'),'islandora:pageCModel')
                 objRelsExt.update()
     sys.exit()
