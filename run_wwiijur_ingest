@@ -1,0 +1,9 @@
+#!/bin/bash
+
+mkdir ./logs 
+
+echo "Running wwiijur ingester: ingest to fedora"
+
+python ./wwiijur_ingest.py ./ &> ./logs/wwiijur_ingest_report.txt
+
+echo "Done."

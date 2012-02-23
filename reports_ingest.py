@@ -226,25 +226,18 @@ if __name__ == '__main__':
                     if tif_file[:tif_file.find('-')] == report_name:
                         report_page_tif_files.append(report_file)
                 #loop through the jp2 files that are associated with the mods
-                for jp2_file in book_page_jp2_files: 
+                for tif_file in report_page_tif_files: 
                     #create an object for each
-                    page_name = jp2_file[jp2_file.find('-') + 1:jp2_file.find('.')]
+                    page_name = tif_file[tif_file.find('-') + 1:tif_file.find('.')]
                     #page_pid = fedora.getNextPID(name_space)
-                    page_label = book_label + '-' + page_name
-                    page_pid = name_space + book_pid[book_pid.find(':'):] + '-' + page_name
+                    page_label = report_label + '-' + page_name
+                    page_pid = name_space + report_pid[report_pid.find(':'):] + '-' + page_name
                     page_label = unicode(page_label)
                     page_object = fedora.createObject(page_pid, label = page_label)
-                    jp2_file_path = os.path.join(source_directory, 'images-jp2', jp2_file)
-                
-                    #add a thumnail to the book if apropriate
-                    if page_name == report + '00000':
-                        #create thumbnail
-                        tn_file_path = tif_file_path + '.jpg'
-                        image_magic_call = ["convert", tif_file_path, '-compress', 'JPEG', "-thumbnail", "x100", "-gravity", "center", "-extent", "x100", tn_file_path]
-                        response = subprocess.call(image_magic_call)
+                    tif_file_path = os.path.join(images_directory, 'tif', tif_file)
                     
                        #ingest thumbnail
-                       #tn_file_path = os.path.join(source_directory, 'images-jp2', jp2_file)
+                       #tn_file_path = os.path.join(source_directory, 'tn', tn_file)
                        tn_file_handle = open(tn_file_path, 'rb')
                        try:
                            report_object.addDataStream(u'TN', u'aTmpStr', label = u'TN',
@@ -270,6 +263,21 @@ if __name__ == '__main__':
                            logging.error('Error in adding JP2 datastream to:' + page_pid + '\n')
                        jp2_file_handle.close()
                 
+                       #add fits datastream
+                       fits_file = book_name + '_TEIP5_page_' + str(int(page_name)) + '.xml' 
+                       fits_file_path = os.path.join(images_directory, 'fits', fits_file)
+                       if os.path.isfile(fits_file_path):
+                           fits_file_handle = open(fits_file_path)
+                           fits_contents = fits_file_handle.read()
+                           fits_file_handle.close()
+                           try:
+                               page_object.addDataStream(u'FITS', unicode(fits_contents, encoding = 'UTF-8'), label=u'FITS',
+                               mimeType=u'text/xml', controlGroup=u'X',
+                               logMessage=u'Added FITS xml.')
+                               logging.info('Added FITS datastream to:' + page_pid)
+                           except FedoraConnectionException:
+                               logging.error('Error in adding FITS datastream to:' + page_pid + '\n')
+ 
                        #add relationships
                        objRelsExt=fedora_relationships.rels_ext(page_object, fedora_model_namespace)
                        objRelsExt.addRelationship('isMemberOf', book_pid)
