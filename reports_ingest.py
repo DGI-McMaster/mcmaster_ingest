@@ -57,10 +57,10 @@ if __name__ == '__main__':
         sys.exit()
 
     def listdir_nohidden(path):
-    """ List directory contents, omitting hidden files """
-    for f in os.listdir(path):
-        if not f.startswith('.') :
-            yield f
+    #List directory contents, omitting hidden files
+        for f in os.listdir(path):
+            if not f.startswith('.') :
+                yield f
     
     # Check that correct subfolders PDF, METADATA, and IMAGES exist in each object folder
     subfolders = listdir_nohidden(reports_directory)
@@ -238,6 +238,12 @@ if __name__ == '__main__':
                     
                        #ingest thumbnail
                        #tn_file_path = os.path.join(source_directory, 'tn', tn_file)
+                       if page_name == '000':
+                           #create thumbnail
+                           tn_file_path = tif_file_path + '.jpg'
+                           image_magic_call = ["convert", jp2_file_path, '-compress', 'JPEG', "-thumbnail", "x100", "-gravity", "center", "-extent", "x100", tn_file_path]
+                           response = subprocess.call(image_magic_call) 
+
                        tn_file_handle = open(tn_file_path, 'rb')
                        try:
                            report_object.addDataStream(u'TN', u'aTmpStr', label = u'TN',
@@ -262,22 +268,20 @@ if __name__ == '__main__':
                        except FedoraConnectionException:
                            logging.error('Error in adding JP2 datastream to:' + page_pid + '\n')
                        jp2_file_handle.close()
-                
-                       #add fits datastream
-                       fits_file = book_name + '_TEIP5_page_' + str(int(page_name)) + '.xml' 
-                       fits_file_path = os.path.join(images_directory, 'fits', fits_file)
-                       if os.path.isfile(fits_file_path):
-                           fits_file_handle = open(fits_file_path)
-                           fits_contents = fits_file_handle.read()
-                           fits_file_handle.close()
-                           try:
-                               page_object.addDataStream(u'FITS', unicode(fits_contents, encoding = 'UTF-8'), label=u'FITS',
-                               mimeType=u'text/xml', controlGroup=u'X',
-                               logMessage=u'Added FITS xml.')
-                               logging.info('Added FITS datastream to:' + page_pid)
-                           except FedoraConnectionException:
-                               logging.error('Error in adding FITS datastream to:' + page_pid + '\n')
- 
+
+                       #add tif ds
+                       tif_file_handle = open(tif_file_path, 'rb')
+                       try:
+                           page_object.addDataStream(u'OBJ', u'aTmpStr', label=u'OBJ',
+                           mimeType = u'image/tif', controlGroup = u'M',
+                           logMessage = u'Added TIF datastream.')
+                           datastream = page_object['OBJ']
+                           datastream.setContent(tif_file_handle)
+                           logging.info('Added TIF datastream to:' + page_pid)
+                       except FedoraConnectionException:
+                           logging.error('Error in adding TIF datastream to:' + page_pid + '\n')
+                       tif_file_handle.close()
+
                        #add relationships
                        objRelsExt=fedora_relationships.rels_ext(page_object, fedora_model_namespace)
                        objRelsExt.addRelationship('isMemberOf', book_pid)
