@@ -67,9 +67,9 @@ if __name__ == '__main__':
 		subfolders = [reports_directory + os.path.sep + subfolder for subfolder in subfolders]
 		for report in subfolders:
 			expected_folders = ['PDF', 'METADATA', 'IMAGES']
-				if not set(listdir_nohidden(folder)) & set(expected_folders):
-					logging.error('Invalid report directory structure \n')
-					sys.exit()
+			if not set(listdir_nohidden(folder)) & set(expected_folders):
+				logging.error('Invalid report directory structure \n')
+				sys.exit()
 	
 			metadata_directory = os.path.join(report, 'METADATA' )
 			if not os.path.isdir(metadata_directory):
