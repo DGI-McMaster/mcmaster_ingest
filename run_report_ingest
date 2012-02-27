@@ -4,6 +4,6 @@ mkdir ../logs
 
 echo "Running report ingester: ingest to fedora"
 
-python /big2/dc/Digital-Collections/archival-objects/mcmaster-ontario-conservation-reports/reports_ingest.py ./ &> ../logs/report_ingest_report.txt
+python /big2/dc/Digital-Collections/archival-objects/mcmaster-ontario-conservation-reports/report_ingest.py ./ &> ../logs/report_ingest_report.txt
 
 echo "Done."
