@@ -261,10 +261,6 @@ if __name__ == '__main__':
                 if tn_page_file[:tn_page_file.find('-')] == book_name:
                     book_page_tn_page_files.append(tn_page_file)
                     
-            #book_page_fits_page_files = list()
-            #for fits_page_file in fits_page_files:
-            #    if fits_page_file[:fits_page_file.find('_')] == book_name:
-            #        book_page_fits_files.append(fits_page_file)
             #loop through the jp2 files that are associated with the mods
             for tif_file in book_page_tif_page_files:
                 #create an object for each
@@ -284,7 +280,7 @@ if __name__ == '__main__':
                     book_object.addDataStream(u'TN', u'aTmpStr', label = u'TN',
                     mimeType = u'image/jpg', controlGroup = u'M',
                     logMessage = u'Added TN datastream.')
-                    datastream = page_object['TN']
+                    datastream = book_object['TN']
                     datastream.setContent(tn_page_file_handle)
                     logging.info('Added TN datastream to:' + book_pid)
                 except FedoraConnectionException:
@@ -317,21 +313,6 @@ if __name__ == '__main__':
                     logging.error('Error in adding TIF datastream to:' + page_pid + '\n')
                 tif_page_file_handle.close()
 
-                #add tif file from fits/
-                #fits_page_file = book_name + '-FITS.xml'
-                #fits_page_file_path = os.path.join(source_directory, 'fits', fits_page_file)
-                #if os.path.isfile(fits_page_file_path):
-                #    fits_page_file_handle = open(fits_page_file_path)
-                #    fits_page_contents = fits_page_file_handle.read()
-                #    fits_page_file_handle.close()
-                #    try:
-                #        page_object.addDataStream(u'FITS', unicode(fits_page_contents), label=u'FITS',
-                #        mimeType=u'text/xml', controlGroup=u'M',
-                #        logMessage=u'Added basic FITS.')
-                #        logging.info('Added FITS datastream to:' + page_pid)
-                #    except FedoraConnectionException:
-                #        logging.error('Error in adding FITS datastream to:' + page_pid + '\n')
-                
                 #add relationships
                 objRelsExt=fedora_relationships.rels_ext(page_object, fedora_model_namespace)
                 objRelsExt.addRelationship('isMemberOf', book_pid)
