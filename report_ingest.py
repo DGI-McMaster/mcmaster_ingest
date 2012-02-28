@@ -209,21 +209,6 @@ if __name__ == '__main__':
                 logging.error('Error in adding MRC datastream to:' + book_pid + '\n')
             marc_file_handle.close()               
 
-            #add mets ds
-            mets_file = book_name + '_METS.xml'
-            mets_file_path = os.path.join(metadata_directory, mets_file)
-            mets_file_handle = open(mets_file_path)
-            mets_contents = mets_file_handle.read()
-            mets_file_handle.close()
-
-            try:
-                book_object.addDataStream(u'METS', unicode(mets_contents, encoding = 'UTF-8'), label=u'METS',
-                mimeType = u'text/xml', controlGroup = u'X',
-                logMessage = u'Added METS datastream.')
-                logging.info('Added METS datastream to:' + book_pid)
-            except FedoraConnectionException:
-                logging.error('Error in adding METS datastream to:' + book_pid + '\n')
-
             #add fits ds
             fits_pdf_file = book_name + '-FITS.xml'
             fits_pdf_file_path = os.path.join(metadata_directory, fits_pdf_file)
