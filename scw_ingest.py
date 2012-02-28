@@ -143,14 +143,14 @@ if __name__ == '__main__':
             #get map_label from mods title
             mods_tree = etree.parse(mods_file_path)
             map_label = mods_tree.xpath("*[local-name() = 'titleInfo']/*[local-name() = 'title']/text()")
-            map_label = unicode(map_label[0].strip("\t\n\r"), encoding='utf-8')
+            map_label = map_label[0].strip("\t\n\r") # map_label is unicode-derived class
             if len(map_label) > 255:
                 map_label = map_label[0:250] + '...'
             map_name = mods_tree.xpath("*[local-name() = 'identifier']/text()")[0].strip("\t\n\r")        
  
             #create a map object
             map_pid = fedora.getNextPID(name_space)
-	    map_object = fedora.createObject(map_pid, label = map_label.encode('utf-8'))
+	    map_object = fedora.createObject(map_pid, label = unicode(urllib.quote(map_label.encode('utf-8')))
 
 	    #add mods datastream
             
