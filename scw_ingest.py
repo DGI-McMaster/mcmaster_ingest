@@ -150,7 +150,7 @@ if __name__ == '__main__':
  
             #create a map object
             map_pid = fedora.getNextPID(name_space)
-	    map_object = fedora.createObject(map_pid, label = unicode(urllib.quote(map_label.encode('utf-8')))
+	    map_object = fedora.createObject(map_pid, label = unicode(urllib.quote(map_label.encode('utf-8'))))
 
 	    #add mods datastream
             
