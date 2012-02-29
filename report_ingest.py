@@ -62,10 +62,10 @@ if __name__ == '__main__':
         logging.error('MODS directory invalid \n')
         sys.exit()
     
-    #fits_directory = os.path.join(source_directory, 'fits')
-    #if not os.path.isdir(fits_directory):
-    #    logging.error('FITS directory invalid \n')
-    #    sys.exit()
+    jpg_page_directory = os.path.join(source_directory, 'jpg')
+    if not os.path.isdir(jpg_page_directory):
+        logging.error('FITS directory invalid \n')
+        sys.exit()
     
     jp2_page_directory = os.path.join(source_directory, 'jp2')
     if not os.path.isdir(jp2_page_directory):
@@ -90,7 +90,7 @@ if __name__ == '__main__':
     #prep data structures (files)
     metadata_files = os.listdir(metadata_directory)
     mods_files = os.listdir(mods_directory)
-    #fits_page_files = os.listdir(fits_page_directory)
+    jpg_page_files = os.listdir(jpg_page_directory)
     tif_page_files = os.listdir(tif_page_directory)
     jp2_page_files = os.listdir(jp2_page_directory)
     pdf_files = os.listdir(pdf_directory)
@@ -245,9 +245,14 @@ if __name__ == '__main__':
             for tn_page_file in tn_page_files:
                 if tn_page_file[:tn_page_file.find('-')] == book_name:
                     book_page_tn_page_files.append(tn_page_file)
+
+            book_page_jpg_page_files = list()
+            for jpg_page_file in jpg_page_files:
+                if jpg_page_file[:jpg_page_file.find('-')] == book_name:
+                    book_page_jpg_page_files.append(jpg_page_file)
                     
             #loop through the jp2 files that are associated with the mods
-            for tif_file in book_page_tif_page_files:
+            for tif_page_file in book_page_tif_page_files:
                 #create an object for each
                 page_name = tif_page_file[tif_page_file.find('-') + 1:tif_page_file.find('.')]
                 #page_pid = fedora.getNextPID(name_space)
@@ -260,16 +265,30 @@ if __name__ == '__main__':
                 tn_page_file_path = os.path.join(source_directory, 'tn', tn_page_file) 
     
                 #add tn ds
-                tn_page_file_handle = open(tn_page_file_path, 'rb')
+                if page_name == '00000':
+                    tn_page_file_handle = open(tn_page_file_path, 'rb')
+                    try:
+                        book_object.addDataStream(u'TN', u'aTmpStr', label = u'TN',
+                        mimeType = u'image/jpg', controlGroup = u'M',
+                        logMessage = u'Added TN datastream.')
+                        datastream = book_object['TN']
+                        datastream.setContent(tn_page_file_handle)
+                        logging.info('Added TN datastream to:' + book_pid)
+                    except FedoraConnectionException:
+                        logging.error('Error in adding TN datastream to:' + book_pid + '\n')
+                    tn_page_file_handle.close()
+
+                #add tn ds
+                jpg_page_file_handle = open(jpg_page_file_path, 'rb')
                 try:
-                    book_object.addDataStream(u'TN', u'aTmpStr', label = u'TN',
+                    book_object.addDataStream(u'IMG-JPG', u'aTmpStr', label = u'IMT-JPG',
                     mimeType = u'image/jpg', controlGroup = u'M',
                     logMessage = u'Added TN datastream.')
-                    datastream = book_object['TN']
+                    datastream = page_object['IMT-JPG']
                     datastream.setContent(tn_page_file_handle)
-                    logging.info('Added TN datastream to:' + book_pid)
+                    logging.info('Added TN datastream to:' + page_pid)
                 except FedoraConnectionException:
-                    logging.error('Error in adding TN datastream to:' + book_pid + '\n')
+                    logging.error('Error in adding TN datastream to:' + page_pid + '\n')
                 tn_page_file_handle.close()
                 
                 #add jp2 ds
