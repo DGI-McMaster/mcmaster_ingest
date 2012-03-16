@@ -1,10 +1,13 @@
-'''
+#!/usr/bin/env python
+
+"""
 Created on January 24, 2012
-This file handles the batch ingest of the Italian topographical map collection for McMaster University Libray
-@adapted from Will Panting's Hamilton College ingest script (https://github.com/DGI-Hamilton-College/Hamilton_ingest)
+This file handles the batch ingest of the Italian topographical map collection for McMaster University Library
+@adapted from Will Panting's Hamilton College ingest script <https://github.com/DGI-Hamilton-College/Hamilton_ingest>
 @author: Nick Ruest
-'''
-import logging, sys, os, ConfigParser, time, subprocess#, shutil
+"""
+
+import logging, sys, os, ConfigParser, time, subprocess
 from fcrepo.connection import Connection, FedoraConnectionException
 from fcrepo.client import FedoraClient
 from islandoraUtils.metadata import fedora_relationships
@@ -141,18 +144,20 @@ if __name__ == '__main__':
             mods_contents = mods_file_handle.read()
            
             #get map_label from mods title
-            mods_tree = etree.parse(mods_file_path)
+            parser = etree.XMLParser(encoding='utf-8')
+            mods_tree = etree.parse(mods_file_path, parser)
             map_label = mods_tree.xpath("*[local-name() = 'titleInfo']/*[local-name() = 'title']/text()")
-            map_label = map_label[0].strip("\t\n\r") # map_label is unicode-derived class
-            if len(map_label) > 255:
+            map_label = map_label[0].strip("\t\n\r")
+            if type(map_label) is str:
+                map_label = map_label.decode('utf-8')
+            map_label = map_label.encode('ascii', 'xmlcharrefreplace').decode('utf-8')
+	    if len(map_label) > 255:
                 map_label = map_label[0:250] + '...'
             map_name = mods_tree.xpath("*[local-name() = 'identifier']/text()")[0].strip("\t\n\r")        
  
             #create a map object
             map_pid = fedora.getNextPID(name_space)
-	    map_object = fedora.createObject(map_pid, label = unicode(urllib.quote(map_label.encode('utf-8'))))
-	    o = fedora.getObject(map_pid)
-	    o.label = unicode(map_label, encoding='utf8')
+	    map_object = fedora.createObject(map_pid, label = map_label) 
 
 	    #add mods datastream
             
