@@ -1,14 +1,19 @@
-'''
+#!/usr/bin/env python
+
+"""
 Created on Feb 14, 2012
 This file handles the batch ingest of the ontario conservation reports
 @adapted from Will Panting's Hamilton College ingest script (https://github.com/DGI-Hamilton-College/Hamilton_ingest)
-@author: Nick Ruest
-'''
-import logging, sys, os, ConfigParser, time, subprocess#, shutil
+This file handles the batch ingest of the Ontario Conservation Report collection for McMaster University Library
+@author: Nick Ruest, Matt McCollow
+"""
+
+import logging, sys, os, ConfigParser, time, subprocess
 from fcrepo.connection import Connection, FedoraConnectionException
 from fcrepo.client import FedoraClient
 from islandoraUtils.metadata import fedora_relationships
 from lxml import etree
+import urlparse, urllib
 
 if __name__ == '__main__':
     if len(sys.argv) == 2:
@@ -134,16 +139,18 @@ if __name__ == '__main__':
             mods_file_handle = open(mods_file_path)
             mods_contents = mods_file_handle.read()
             
-            #get book_label from mods title
-            mods_tree = etree.parse(mods_file_path)
+            #get book_label from mods
+            parser = etree.XMLParser(encoding='utf-8')       
+            mods_tree = etree.parse(mods_file_path, parser)
             book_label = mods_tree.xpath("*[local-name() = 'titleInfo']/*[local-name() = 'title']/text()")
-            book_label = book_label[0]
+            book_label = book_label[0].strip("\t\n\r")
+            if type(book_label) is str:
+                book_label = book_label.decode('utf-8')
+            book_label = book_label.encode('ascii', 'xmlcharrefreplace').decode('utf-8')
             if len(book_label) > 255:
                 book_label = book_label[0:250] + '...'
             book_label = unicode(book_label)
 	    book_name = mods_tree.xpath("*[local-name() = 'recordInfo']/*[local-name() = 'recordIdentifier']/text()")[0].strip('ocm') 
-            #book_name = mods_tree.xpath("mods/recordInfo/recordIdentifier/@source/text()")[0].strip('ocm')           
-            print(book_name)
  
             #create a book object
             book_pid = fedora.getNextPID(name_space)
@@ -263,7 +270,8 @@ if __name__ == '__main__':
                 tif_page_file_path = os.path.join(source_directory, 'tif', tif_page_file)
 		jp2_page_file_path = os.path.join(source_directory, 'jp2', jp2_page_file) 
                 tn_page_file_path = os.path.join(source_directory, 'tn', tn_page_file) 
-    
+                jpg_page_file_path = os.path.join(source_directory, 'jpg', jpg_page_file)   
+ 
                 #add tn ds
                 if page_name == '00000':
                     tn_page_file_handle = open(tn_page_file_path, 'rb')
@@ -285,11 +293,11 @@ if __name__ == '__main__':
                     mimeType = u'image/jpg', controlGroup = u'M',
                     logMessage = u'Added TN datastream.')
                     datastream = page_object['IMT-JPG']
-                    datastream.setContent(tn_page_file_handle)
+                    datastream.setContent(jpg_page_file_handle)
                     logging.info('Added TN datastream to:' + page_pid)
                 except FedoraConnectionException:
                     logging.error('Error in adding TN datastream to:' + page_pid + '\n')
-                tn_page_file_handle.close()
+                jpg_page_file_handle.close()
                 
                 #add jp2 ds
                 jp2_page_file_handle = open(jp2_page_file_path, 'rb')
