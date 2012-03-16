@@ -4,7 +4,8 @@
 Created on January 24, 2012
 This file handles the batch ingest of the Italian topographical map collection for McMaster University Library
 @adapted from Will Panting's Hamilton College ingest script <https://github.com/DGI-Hamilton-College/Hamilton_ingest>
-@author: Nick Ruest
+This file handles the batch ingest of the Spanish Civil War poster collection for McMaster University Library
+@author: Nick Ruest, Matt McCollow
 """
 
 import logging, sys, os, ConfigParser, time, subprocess
