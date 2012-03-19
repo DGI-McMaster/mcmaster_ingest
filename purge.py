@@ -17,7 +17,7 @@ fedoraPassword = config.get('Fedora','password')
 START_PID = int(sys.argv[1])
 END_PID = int(sys.argv[2])
 
-c = Connection(fedoraUrl, fedoraUserName, fedoraPassword)
+c = Connection(fedoraUrl, username=fedoraUserName, password=fedoraPassword)
 fc = FedoraClient(c)
 
 for i in range((START_PID), (END_PID)+1):
