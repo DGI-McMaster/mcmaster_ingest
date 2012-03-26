@@ -106,7 +106,7 @@ if __name__ == '__main__':
     '''
         #put in the JapaneseSilentFilmCollection collection object
     try:
-        collection_label = u'2'
+        collection_label = u'5946'
         collection_pid = unicode(name_space + ':' + collection_label)
         collection_policy = u'<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd"> <content_models> <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"/> <content_model dsid="ISLANDORACM" name=""Book Content Model" namespace="macrepo:1" pid="islandora:bookCModel"/> </content_models> <search_terms/> <staging_area/> <relationship>isMemberOfCollection</relationship> </collection_policy> '
         fedora.getObject(collection_pid)
