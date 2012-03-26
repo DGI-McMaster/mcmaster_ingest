@@ -34,7 +34,7 @@ if __name__ == '__main__':
     log_directory = os.path.join(source_directory,'logs')
     if not os.path.isdir(log_directory):
         os.mkdir(log_directory)
-    logFile = os.path.join(log_directory,'/big2/dc/Digital-Collections/archival-objects/scw' + time.strftime('%y_%m_%d') + '.log')
+    logFile = os.path.join(log_directory,'/media/ingest/scw' + time.strftime('%y_%m_%d') + '.log')
     logging.basicConfig(filename=logFile, level=logging.DEBUG)
 
     #get config
@@ -56,42 +56,42 @@ if __name__ == '__main__':
         sys.exit()
 
     #setup the directories
-    mods_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/mods')
+    mods_directory = os.path.join(source_directory, '/media/ingest/scw/mods')
     if not os.path.isdir(mods_directory):
         logging.error('MODS directory invalid \n')
         sys.exit()
     
-    tif_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/tif')
+    tif_directory = os.path.join(source_directory, '/media/ingest/scw/tif')
     if not os.path.isdir(tif_directory):
         logging.error('TIF directory invalid \n')
         sys.exit()
 
-    jpg_med_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/jpg_medium')
+    jpg_med_directory = os.path.join(source_directory, '/media/ingest/scw/jpg_medium')
     if not os.path.isdir(jpg_med_directory):
         logging.error('JPG medium directory invalid \n')
         sys.exit()
 
-    jpg_thumb_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/jpg_thumb')
+    jpg_thumb_directory = os.path.join(source_directory, '/media/ingest/scw/jpg_thumb')
     if not os.path.isdir(jpg_thumb_directory):
         logging.error('JPG thumbnail directory invalid \n')
         sys.exit()    
 
-    jp2_lossy_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/jp2_lossy')
+    jp2_lossy_directory = os.path.join(source_directory, '/media/ingest/scw/jp2_lossy')
     if not os.path.isdir(jp2_lossy_directory):
         logging.error('JP2 lossy directory invalid \n')
         sys.exit()
     
-    jp2_lossless_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/jp2_lossless')
+    jp2_lossless_directory = os.path.join(source_directory, '/media/ingest/scw/jp2_lossless')
     if not os.path.isdir(jp2_lossless_directory):
         logging.error('JP2 lossless directory invalid \n')
         sys.exit()
    
-    fits_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/fits')
+    fits_directory = os.path.join(source_directory, '/media/ingest/scw/fits')
     if not os.path.isdir(fits_directory):
       logging.error('FITS directroy invalid \n')
       sys.exit()
 
-    macrepo_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/scw/macrepo')
+    macrepo_directory = os.path.join(source_directory, '/media/ingest/scw/macrepo')
     if not os.path.isdir(macrepo_directory):
       logging.error('MACREPO directroy invalid \n')
       sys.exit()
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     '''
     #put in the World War, 1914-1918, aerial photograph object
     try:
-        collection_label = u'5624'
+        collection_label = u'2'
         collection_pid = unicode(name_space + ':' + collection_label)
         collection_policy = u'<collection_policy xmlns="http://www.islandora.ca" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="" xsi:schemaLocation="http://www.islandora.ca http://syn.lib.umanitoba.ca/collection_policy.xsd"> <content_models> <content_model dsid="ISLANDORACM" name="Islandora Collection Model ~ islandora:collectionCModel" namespace="islandora:1" pid="islandora:collectionCModel"/> <content_model dsid="ISLANDORACM" name="Islandora large image content model" namespace="macrepo:1" pid="islandora:sp_large_image_cmodel"/> </content_models> <search_terms/> <staging_area/> <relationship>isMemberOfCollection</relationship> </collection_policy> '
         fedora.getObject(collection_pid)
