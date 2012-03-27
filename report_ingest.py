@@ -158,7 +158,7 @@ if __name__ == '__main__':
             #add mods datastream
             mods_file_handle.close()
             try:
-                book_object.addDataStream(u'MODS', mods_contents.encode('ascii', 'xmlcharrefreplace').decode('utf-8'), label = u'MODS',
+                book_object.addDataStream(u'MODS', mods_contents.decode('utf-8'), label = u'MODS',
                 mimeType = u'text/xml', controlGroup = u'X',
                 logMessage = u'Added basic mods meta data.')
                 logging.info('Added MODS datastream to:' + book_pid)
@@ -191,7 +191,7 @@ if __name__ == '__main__':
             mrcxml_file_handle.close()
 
             try:
-                book_object.addDataStream(u'MRC-XML', mrcxml_contents.encode('ascii', 'xmlcharrefreplace').decode('utf-8'), label=u'MRC-XML',
+                book_object.addDataStream(u'MRC-XML', mrcxml_contents.decode('utf-8'), label=u'MRC-XML',
                       mimeType = u'application/xml', controlGroup=u'X',
                       logMessage = u'Added basic mrc xml.')
                 logging.info('Added mrc xml datastream to:' + book_pid)
