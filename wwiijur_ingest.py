@@ -42,9 +42,7 @@ if __name__ == '__main__':
     fedoraPassword = config.get('Fedora','password')
             
     #get fedora connection
-    connection = Connection(fedoraUrl,
-                    username=fedoraUserName,
-                    password=fedoraPassword)
+    connection = Connection(fedoraUrl, username=fedoraUserName, password=fedoraPassword)
     try:
         fedora=FedoraClient(connection)
     except FedoraConnectionException:
@@ -67,29 +65,24 @@ if __name__ == '__main__':
         logging.error('TIF directory invalid \n')
         sys.exit()
 
-    jpg_thumb_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWIIJUR/jpg_thumb')
-    if not os.path.isdir(tif_directory):
-        logging.error('TIF directory invalid \n')
+    jpg_thumb_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWIIJUR/jpg')
+    if not os.path.isdir(jpg_directory):
+        logging.error('JPG directory invalid \n')
         sys.exit()
 
-    jpg_medium_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWIIJUR/jpg_medium')
-    if not os.path.isdir(jpg_medium_directory):
-        logging.error('TIF directory invalid \n')
-        sys.exit()
-    
     fits_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWIIJUR/fits')
     if not os.path.isdir(fits_directory):
         logging.error('FITS pages directory invalid \n')
         sys.exit()
     
-    jp2_lossless_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWIIJUR/jp2_lossless')
-    if not os.path.isdir(jp2_lossless_directory):
-        logging.error('JP2 lossless directory invalid \n')
+    jp2_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWIIJUR/jp2')
+    if not os.path.isdir(jp2_directory):
+        logging.error('JP2 directory invalid \n')
         sys.exit()
     
-    jp2_lossy_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWIIJUR/jp2_lossy')
-    if not os.path.isdir(jp2_lossy_directory):
-        logging.error('JP2 lossy directory invalid \n')
+    tn_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWIIJUR/tn')
+    if not os.path.isdir(tn_lossy_directory):
+        logging.error('TN lossy directory invalid \n')
         sys.exit()
     
     #prep data structures (files)
@@ -97,17 +90,16 @@ if __name__ == '__main__':
     macrepo_files = os.listdir(macrepo_directory)
     tif_files = os.listdir(tif_directory)
     fits_files = os.listdir(fits_directory)
-    jpg_medium_page_files = os.listdir(jpg_medium_directory)
-    jpg_thumb_page_files = os.listdir(jpg_thumb_directory)
-    jp2_lossless_files = os.listdir(jp2_lossless_directory)
-    jp2_lossy_files = os.listdir(jp2_lossy_directory)
+    jpg_page_files = os.listdir(jpg_directory)
+    tn_page_files = os.listdir(tn_directory)
+    jp2_files = os.listdir(jp2_directory)
     
     name_space = u'macrepo'
     
     '''
     do ingest
     '''
-        #put in the JapaneseSilentFilmCollection collection object
+    #put in the WWIIJUR collection object
     try:
         collection_label = u'30'
         collection_pid = unicode(name_space + ':' + collection_label)
@@ -141,9 +133,13 @@ if __name__ == '__main__':
             mods_contents = mods_file_handle.read()
             
             #get letter_label from mods title
-            mods_tree = etree.parse(mods_file_path)
+            parser = etree.XMLParser(encoding='utf-8')
+            mods_tree = etree.parse(mods_file_path, parser)
             letter_label = mods_tree.xpath("*[local-name() = 'titleInfo']/*[local-name() = 'title']/text()")
-            letter_label = letter_label[0]
+            letter_label = letter_label[0].strip("\t\n\r")
+            if type(letter_label) is str:
+                letter_label = letter_label.decode('utf-8')
+            letter_label = letter_label.encode('ascii', 'xmlcharrefreplace').decode('utf-8')
             if len(letter_label) > 255:
                 letter_label = letter_label[0:250] + '...'
             letter_label = unicode(letter_label)           
@@ -156,7 +152,7 @@ if __name__ == '__main__':
             #add mods datastream
             mods_file_handle.close()
             try:
-                letter_object.addDataStream(u'MODS', unicode(mods_contents, encoding = 'UTF-8'), label = u'MODS',
+                letter_object.addDataStream(u'MODS', mods_contents.decode('utf-8'), label = u'MODS',
                 mimeType = u'text/xml', controlGroup = u'X',
                 logMessage = u'Added basic mods meta data.')
                 logging.info('Added MODS datastream to:' + letter_pid)
@@ -173,13 +169,27 @@ if __name__ == '__main__':
             macrepo_contents = macrepo_file_handle.read()
             macrepo_file_handle.close()
             try:
-                letter_object.addDataStream(u'MACREPO', unicode(fits_contents, encoding = 'UTF-8'), label=u'MACREPO',
-                mimeType = u'text/xml', controlGroup=u'M',
+                letter_object.addDataStream(u'MACREPO', fits_contents.decode('utf-8'), label=u'MACREPO',
+                mimeType = u'text/xml', controlGroup=u'X',
                 logMessage = u'Added basic MACREPO meta data.')
                 logging.info('Added MACREPO datastream to:' + letter_pid)
             except FedoraConnectionException:
                 logging.error('Error in adding MACREPO datastream to:' + letter_pid + '\n')
 
+            #add cover/tn ds
+            tn_cover_file = letter_name + '001.jpg'
+            tn_cover_file_path = os.path.join(tn_page_directory, tn_cover_file)
+            tn_cover_file_handle = open(tn_cover_file_path, 'rb')
+
+            try:
+                letter_object.addDataStream(u'TN', u'aTmpStr', label=u'TN', mimeType = u'image/jpg', controlGroup = u'M', logMessage = u'Added TN datastream.')
+                datastream = letter_object['TN']
+                datastream.setContent(tn_cover_file_handle)
+                logging.info('Add TN datastream to:' + letter_pid)
+            except FedoraConnectionException:
+                logging.error('Error in adding TN datastream to:' + letter_pid + '\n')
+            tn_cover_file_handle.close()
+            
             #add relationships
             objRelsExt = fedora_relationships.rels_ext(letter_object, fedora_model_namespace)
             objRelsExt.addRelationship('isMemberOf', collection_pid)
@@ -189,20 +199,9 @@ if __name__ == '__main__':
             #get the object page datastructures
             letter_page_tif_files = list()
             for tif_file in tif_files:
-                if jp2_file[:tif_file.find('-')] == letter_name:
+                if tif_file[:tif_file.find('-')] == letter_name:
                     letter_page_tif_files.append(tif_file)
 
-
-            letter_page_jp2_lossy_thumb_files = list()
-            for jp2_lossy_file in jp2_lossy_files:
-                if jp2_lossy_file[:jp2_lossy_file.find('-')] == letter_name:
-                    letter_page_jp2_lossy_files.append(jp2_lossy_file)
-
-            letter_page_jp2_lossless_files = list()
-            for jp2_lossless_file in jp2_lossless_files:
-                if jpg_thumb_file[:jp2_lossless_file.find('-')] == letter_name:
-                    letter_page_jp2_lossless_files.append(jp2_lossless_file)
-                    
             #loop through the jp2 files that are associated with the mods
             for tif_file in letter_page_tif_files:
                 #create an object for each
@@ -212,35 +211,15 @@ if __name__ == '__main__':
                 page_pid = name_space + letter_pid[letter_pid.find(':'):] + '-' + page_name
                 page_label = unicode(page_label)
                 page_object = fedora.createObject(page_pid, label = page_label)
-                tif_file_path = os.path.join(source_directory, 'tif', tif_file)
-                
-                #add a thumnail to the object if apropriate
-                if page_name == '001':
-                    #create thumbnail
-                    tn_file_path = tif_file_path + '.jpg'
-                    image_magic_call = ["convert", tif_file_path, '-compress', 'JPEG', "-thumbnail", "x100", "-gravity", "center", "-extent", "x100", tn_file_path]
-                    response = subprocess.call(image_magic_call)
-                    
-                    #ingest thumbnail
-                    #tn_file_path = os.path.join(source_directory, 'tif', tif_file)
-                    tn_file_handle = open(tn_file_path, 'rb')
-                    try:
-                        letter_object.addDataStream(u'TN', u'aTmpStr', label = u'TN',
-                        mimeType = u'image/jpg', controlGroup = u'M',
-                        logMessage = u'Added TN datastream.')
-                        datastream = letter_object['TN']
-                        datastream.setContent(tn_file_handle)
-                        logging.info('Added TN datastream to:' + letter_pid)
-                    except FedoraConnectionException:
-                        logging.error('Error in adding TN datastream to:' + letter_pid + '\n')
-                    tn_file_handle.close()
                 
                 #add tif ds
+                tif_file = letter_name + '-' + page_name + '.tif'
+                tif_file_path = os.path.join(source_directory, 'tif', tif_file)
                 tif_file_handle = open(tif_file_path, 'rb')
                 try:
                     page_object.addDataStream(u'OBJ', u'aTmpStr', label=u'OBJ',
                     mimeType = u'image/tif', controlGroup = u'M',
-                    logMessage = u'Added JP2 datastream.')
+                    logMessage = u'Added TIF datastream.')
                     datastream = page_object['OBJ']
                     datastream.setContent(tif_file_handle)
                     logging.info('Added TIF datastream to:' + page_pid)
@@ -249,48 +228,61 @@ if __name__ == '__main__':
                 tif_file_handle.close()
                 
                 #add jp2 ds
-                jp2_lossy_file_handle = open(jp2_lossy_file_path, 'rb')
+                jp2_file = letter_name + '-' + page_name + '.jp2'
+                jp2_file_path = os.path.join(source_directory, 'jp2', jp2_file)
+                jp2_file_handle = open(jp2_file_path, 'rb')
                 try:
                     page_object.addDataStream(u'JP2', u'aTmpStr', label=u'JP2',
                     mimeType = u'image/jp2', controlGroup = u'M',
                     logMessage = u'Added JP2 datastream.')
                     datastream = page_object['JP2']
-                    datastream.setContent(jp2_lossy_file_handle)
-                    logging.info('Added JP2 lossy datastream to:' + page_pid)
+                    datastream.setContent(jp2_file_handle)
+                    logging.info('Added JP2 datastream to:' + page_pid)
                 except FedoraConnectionException:
-                    logging.error('Error in adding JP2 lossy datastream to:' + page_pid + '\n')
-                jp2_lossy_file_handle.close()
+                    logging.error('Error in adding JP2 datastream to:' + page_pid + '\n')
+                jp2_file_handle.close()
 
-                #add jp2 ds
-                jp2_lossless_file_handle = open(jp2_lossless_file_path, 'rb')
+                #add tn ds
+                tn_file = letter_name + '-' page_name + '.jpg'
+                tn_file_path = os.path.join(source_directory, 'tn', tn_file)
+                tn_file_handle = open(tn_file_path, 'rb')
                 try:
-                    page_object.addDataStream(u'LOSSLESS_JP2', u'aTmpStr', label=u'LOSSLESS_JP2',
-                    mimeType = u'image/jp2', controlGroup = u'M',
-                    logMessage = u'Added JP2 datastream.')
-                    datastream = page_object['LOSSLESS_JP2']
-                    datastream.setContent(jp2_lossless_file_handle)
-                    logging.info('Added JP2 lossless datastream to:' + page_pid)
+                    page_object.addDataStream(u'TN', u'aTmpStr', label=u'TN',
+                    mimeType = u'image/jpg', controlGroup = u'M',
+                    logMessage = u'Added TN datastream.')
+                    datastream = page_object['TN']
+                    datastream.setContent(tn_file_handle)
+                    logging.info('Added TN datastream to:' + page_pid)
                 except FedoraConnectionException:
-                    logging.error('Error in adding JP2 lossless datastream to:' + page_pid + '\n')
-                jp2_lossless_file_handle.close()
+                    logging.error('Error in addign TN  datastream to:' + page_pid + '\n')
+                tn_file_handle.close()
 
+                #add jpg ds
+                jpg_file = letter_name + '-' + page_name + '.jpg'
+                jpg_file_path = os.path.join(source_directory, 'jpg', jpg_file)
+                jpg_file_handle = open(jpg_file_path, 'rb')
+                try:
+                    page_object.addDataStream(u'JPEG', u'aTmpStr', label=u'JPEG', mimeType = u'image/jpg', controlGroup = u'M', logMessage = u'Added JPEG datastream.')
+                    datastream = page_object['JPEG']
+                    datastream.setContent(jpg_file_handle)
+                    logging.info('Added JPEG datastream to:' + page_pid)
+                except FedoraConnectionException
+                    logging.error('Error in adding JPEG datastream to:' + page_pid + '\n')
+                jpg_file_handle.close()
 
                 #add fits ds
-                fits_file = letter_name + str(int(page_name)) + '-FITS'  + '.xml'
+                fits_file = letter_name + '-' + page_name + '-FITS.xml'
                 fits_file_path = os.path.join(source_directory, 'fits', fits_file)
-                if os.path.isfile(fits_file_path):
-                    fits_file_handle = open(fits_file_path)
-                    fits_contents = fits_file_handle.read()
-                    fits_file_handle.close()
-                    try:
-                        page_object.addDataStream(u'FITS', unicode(fits_contents), label=u'FITS',
-                        mimeType=u'text/xml', controlGroup=u'M',
-                        logMessage=u'Added basic FITS.')
-                        logging.info('Added FITS datastream to:' + page_pid)
-                    except FedoraConnectionException:
-                        logging.error('Error in adding FITS datastream to:' + page_pid + '\n')
+                fits_file_handle = open(fits_file_path)
+                fits_content = fits_file_handle.read()
+                fits_file_handle.close()
                 
-                
+                try:
+                    page_object.addDataStream(u'FITS', fits_contents.decode('utf-8'), label=u'FITS', mimeType=u'aplication/xml', controlGroup=u'X', logMessage=u'Added FITS xml.')
+                    logging.info('Added FITS datastream to:' + 
+                except FedoraConnectionException:
+                  logging.error('Error in adding FITS datastream to:' + page_pid + '\n')
+
                 #add relationships
                 objRelsExt=fedora_relationships.rels_ext(page_object, fedora_model_namespace)
                 objRelsExt.addRelationship('isMemberOf', letter_pid)
