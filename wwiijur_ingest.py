@@ -65,7 +65,7 @@ if __name__ == '__main__':
         logging.error('TIF directory invalid \n')
         sys.exit()
 
-    jpg_thumb_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWIIJUR/jpg')
+    jpg_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWIIJUR/jpg')
     if not os.path.isdir(jpg_directory):
         logging.error('JPG directory invalid \n')
         sys.exit()
@@ -81,8 +81,8 @@ if __name__ == '__main__':
         sys.exit()
     
     tn_directory = os.path.join(source_directory, '/big2/dc/Digital-Collections/archival-objects/WWIIJUR/tn')
-    if not os.path.isdir(tn_lossy_directory):
-        logging.error('TN lossy directory invalid \n')
+    if not os.path.isdir(tn_directory):
+        logging.error('TN directory invalid \n')
         sys.exit()
     
     #prep data structures (files)
@@ -90,8 +90,8 @@ if __name__ == '__main__':
     macrepo_files = os.listdir(macrepo_directory)
     tif_files = os.listdir(tif_directory)
     fits_files = os.listdir(fits_directory)
-    jpg_page_files = os.listdir(jpg_directory)
-    tn_page_files = os.listdir(tn_directory)
+    jpg_files = os.listdir(jpg_directory)
+    tn_files = os.listdir(tn_directory)
     jp2_files = os.listdir(jp2_directory)
     
     name_space = u'macrepo'
@@ -160,7 +160,7 @@ if __name__ == '__main__':
                 logging.error('Error in adding MODS datastream to:' + letter_pid + '\n')
             
             #letter name
-            letter_name = mods_file[:mods_file.find('-')]
+            letter_name = mods_tree.xpath("*[local-name() = 'identifier']/text()")[0].strip("\t\n\r") 
 
             #add macrepo ds
             macrepo_file = letter_name + '-MACREPO.xml'
@@ -169,7 +169,7 @@ if __name__ == '__main__':
             macrepo_contents = macrepo_file_handle.read()
             macrepo_file_handle.close()
             try:
-                letter_object.addDataStream(u'MACREPO', fits_contents.decode('utf-8'), label=u'MACREPO',
+                letter_object.addDataStream(u'MACREPO', macrepo_contents.decode('utf-8'), label=u'MACREPO',
                 mimeType = u'text/xml', controlGroup=u'X',
                 logMessage = u'Added basic MACREPO meta data.')
                 logging.info('Added MACREPO datastream to:' + letter_pid)
@@ -177,8 +177,8 @@ if __name__ == '__main__':
                 logging.error('Error in adding MACREPO datastream to:' + letter_pid + '\n')
 
             #add cover/tn ds
-            tn_cover_file = letter_name + '001.jpg'
-            tn_cover_file_path = os.path.join(tn_page_directory, tn_cover_file)
+            tn_cover_file = letter_name + '-001.jpg'
+            tn_cover_file_path = os.path.join(tn_directory, tn_cover_file)
             tn_cover_file_handle = open(tn_cover_file_path, 'rb')
 
             try:
@@ -226,6 +226,7 @@ if __name__ == '__main__':
                 except FedoraConnectionException:
                     logging.error('Error in adding TIF datastream to:' + page_pid + '\n')
                 tif_file_handle.close()
+		print(tif_file)
                 
                 #add jp2 ds
                 jp2_file = letter_name + '-' + page_name + '.jp2'
@@ -243,7 +244,7 @@ if __name__ == '__main__':
                 jp2_file_handle.close()
 
                 #add tn ds
-                tn_file = letter_name + '-' page_name + '.jpg'
+                tn_file = letter_name + '-' + page_name + '.jpg'
                 tn_file_path = os.path.join(source_directory, 'tn', tn_file)
                 tn_file_handle = open(tn_file_path, 'rb')
                 try:
@@ -266,7 +267,7 @@ if __name__ == '__main__':
                     datastream = page_object['JPEG']
                     datastream.setContent(jpg_file_handle)
                     logging.info('Added JPEG datastream to:' + page_pid)
-                except FedoraConnectionException
+                except FedoraConnectionException:
                     logging.error('Error in adding JPEG datastream to:' + page_pid + '\n')
                 jpg_file_handle.close()
 
@@ -274,12 +275,12 @@ if __name__ == '__main__':
                 fits_file = letter_name + '-' + page_name + '-FITS.xml'
                 fits_file_path = os.path.join(source_directory, 'fits', fits_file)
                 fits_file_handle = open(fits_file_path)
-                fits_content = fits_file_handle.read()
+                fits_contents = fits_file_handle.read()
                 fits_file_handle.close()
                 
                 try:
                     page_object.addDataStream(u'FITS', fits_contents.decode('utf-8'), label=u'FITS', mimeType=u'aplication/xml', controlGroup=u'X', logMessage=u'Added FITS xml.')
-                    logging.info('Added FITS datastream to:' + 
+                    logging.info('Added FITS datastream to:' + page_pid) 
                 except FedoraConnectionException:
                   logging.error('Error in adding FITS datastream to:' + page_pid + '\n')
 
