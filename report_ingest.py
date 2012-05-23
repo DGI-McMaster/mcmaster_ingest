@@ -90,6 +90,11 @@ if __name__ == '__main__':
         logging.error('TN directory invalid \n')
         sys.exit()
 
+    ocr_page_directory = os.path.joic(source_directory, 'ocr')
+    if not os.path.isdir(ocr_page_directory):
+	logging.error('OCR directory invalid \n')
+	sys.exit()
+
     #prep data structures (files)
     metadata_files = os.listdir(metadata_directory)
     mods_files = os.listdir(mods_directory)
@@ -98,6 +103,7 @@ if __name__ == '__main__':
     jp2_page_files = os.listdir(jp2_page_directory)
     pdf_files = os.listdir(pdf_directory)
     tn_page_files = os.listdir(tn_page_directory)
+    ocr_page_files = os.listdir(ocr_page_directory)
 
     name_space = u'macrepo'
 
@@ -325,6 +331,19 @@ if __name__ == '__main__':
                 except FedoraConnectionException:
                     logging.error('Error in adding TIF datastream to:' + page_pid + '\n')
                 tif_page_file_handle.close()
+
+		#add ocr ds
+		ocr_page_file = book_name + '-' + page_name + '.txt'
+		ocr_page_file_path = os.path.join(source_directory, 'ocr', ocr_page_file)
+		ocr_page_file_handle = open(ocr_page_file_path, 'rb')
+		try:
+		    page_object.addDataStream(u'OCR', u'aTmpStr', label=u'OCR', mimeType = u'text/plain', controlGroup ='M', logMessage = u'Added OCR datastream.')
+		    datastream = page_objec;'OCR']
+		    datastream.setContent(ocr_page_file_handle)
+		    logging.info('Added OCR datastream to:' + page_pid)
+		except FedoraConnectionException:
+		    logging.error('Error in adding OCR datastream to:' + page_pid + '\n')
+		ocr_page_file_handle.close()
 
                 #add relationships
                 objRelsExt=fedora_relationships.rels_ext(page_object, fedora_model_namespace)
