@@ -1,0 +1,9 @@
+#!/bin/bash
+
+mkdir ./logs 
+
+echo "Running report ingester: ingest to fedora"
+
+python ./epistemology_ingest.py ./ &> ./logs/report_epistemology_ingest.py.txt
+
+echo "Done."

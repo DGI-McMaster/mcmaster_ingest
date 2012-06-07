@@ -1,0 +1,9 @@
+#!/bin/bash
+
+mkdir ./logs 
+
+echo "Running map ingester: ingest to fedora"
+
+python ./France_100k_ingest.py ./ &> ./logs/France_100k_ingest_report.txt
+
+echo "Done."
